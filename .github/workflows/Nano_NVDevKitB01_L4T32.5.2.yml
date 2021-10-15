@@ -1,4 +1,4 @@
-name: Nano_NVDevKitB01_L4T32.5.0
+name: Nano_NVDevKitB01_L4T32.5.2
 
 on:
   push:
@@ -14,6 +14,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Configure the driver
-      run: cd bin && ./config/setup.sh -s 1 -b 1 -p 1 -d 
+      run: cd bin && ./config/setup.sh -s 1 -b 1 -p 3 -d 
     - name: Setup the kernel sources
       run: cd bin && ./setup.sh -k
