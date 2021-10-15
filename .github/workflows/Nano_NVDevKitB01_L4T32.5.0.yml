@@ -15,3 +15,5 @@ jobs:
     - uses: actions/checkout@v2
     - name: configure
       run: cd bin && ./config/setup.sh -s 1 -b 1 -p 1 -d 
+    - name: setup
+      run: cd bin && ./setup.sh -k
