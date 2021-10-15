@@ -1,0 +1,17 @@
+name: Nano_NVDevKitB01_L4T32.5.0
+
+on:
+  push:
+    branches: [ action_test ]
+  pull_request:
+    branches: [ action_test ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: configure
+      run: cd vc_mipi_nvidia/bin && ./config/setup.sh -s 1 -b 1 -p 1 -d 
