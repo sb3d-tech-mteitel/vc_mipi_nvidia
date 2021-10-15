@@ -144,6 +144,8 @@ while [ $# != 0 ] ; do
 		;;
 	-k|--kernel)
 		configure
+        install_system_tools
+        setup_toolchain
 		setup_kernel
         exit 0
 		;;

@@ -16,4 +16,6 @@ jobs:
     - name: Configure the driver
       run: cd bin && ./config/setup.sh -s 1 -b 1 -p 4 -d 
     - name: Setup the kernel sources
-      run: cd bin && ./setup.sh -k
+      run: cd bin && ./setup.sh --kernel
+    - name: Build the kernel
+      run: cd bin && ./build.sh --kernel
