@@ -14,4 +14,4 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: configure
-      run: cd vc_mipi_nvidia/bin && ./config/setup.sh -s 1 -b 1 -p 1 -d 
+      run: cd bin && ./config/setup.sh -s 1 -b 1 -p 1 -d 
