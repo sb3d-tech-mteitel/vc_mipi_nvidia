@@ -129,7 +129,8 @@ print_configure_camera_note() {
 configure_camera() {
         setup_nano
         print_configure_camera_note
-        nano -l +23 $DT_CAM_FILE
+        #nano -l +23 $DT_CAM_FILE
+	gedit $DT_CAM_FILE
 }
 
 print_note_before_start() {
