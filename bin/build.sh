@@ -18,9 +18,22 @@ configure() {
 }
 
 patch_kernel() {
-        echo "Copying driver sources into kernel sources ..."
+		pwd
+		echo "Copying driver sources into kernel sources ..."
+
+echo "cp ../src/devicetree/CapableRobotsBaseboard_TX2NX/tegra186-p3636-0001-p3509-0000-a01.dts ../build/Linux_for_Tegra/source/public/hardware/nvidia/platform/t18x/lanai/kernel-dts/tegra186-p3636-0001-p3509-0000-a01.dts"
+cp ../src/devicetree/CapableRobotsBaseboard_TX2NX/tegra186-p3636-0001-p3509-0000-a01.dts ../build/Linux_for_Tegra/source/public/hardware/nvidia/platform/t18x/lanai/kernel-dts/tegra186-p3636-0001-p3509-0000-a01.dts
+
+echo "cp ../src/devicetree/CapableRobotsBaseboard_TX2NX/tegra186-camera-vc-mipi-cam.dtsi ../build/Linux_for_Tegra/source/public/hardware/nvidia/platform/t18x/lanai/kernel-dts/tegra186-camera-vc-mipi-cam.dtsi"
+cp ../src/devicetree/CapableRobotsBaseboard_TX2NX/tegra186-camera-vc-mipi-cam.dtsi ../build/Linux_for_Tegra/source/public/hardware/nvidia/platform/t18x/lanai/kernel-dts/tegra186-camera-vc-mipi-cam.dtsi
+
+echo "cp ../src/driver/tegra-v4l2-camera.h ../build/Linux_for_Tegra/source/public/kernel/nvidia/include/media/"
+cp ../src/driver/tegra-v4l2-camera.h ../build/Linux_for_Tegra/source/public/kernel/nvidia/include/media/
+
+		echo "Copying driver sources into kernel sources ..."
         cp -Ruv $DRIVER_DIR/* $DRIVER_DST_DIR
         cp -Ruv $DT_CAM_FILE $DT_CAM_FILE_DST_DIR
+
 }
 
 configure_kernel() {
@@ -45,7 +58,7 @@ build_modules() {
 
 build_device_tree() {
         echo "Build device tree ..."
-        cd $KERNEL_SOURCE
+		cd $KERNEL_SOURCE
         make -C kernel/kernel-4.9/ O=$KERNEL_OUT -j$(nproc) --output-sync=target dtbs
         cp -rfv $KERNEL_OUT/arch/arm64/boot/dts/*.dtb $BUILD_DIR/Linux_for_Tegra/kernel/dtb/
 }

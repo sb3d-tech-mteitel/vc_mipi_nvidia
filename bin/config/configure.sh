@@ -158,12 +158,36 @@ case $VC_MIPI_SOM in
                 PATCHES+=('kernel_TX2_32.6.1+')
                 ;;
         esac
-        DT_CAM_FILE=$DT_CAM_DIR/Auvidea_J20_TX2/tegra186-camera-vc-mipi-cam.dtsi
+
+		DT_CAM_FILE=$DT_CAM_DIR/Auvidea_J20_TX2/tegra186-camera-vc-mipi-cam.dtsi
         DT_CAM_FILE_DST_DIR=$KERNEL_SOURCE/hardware/nvidia/platform/t18x/common/kernel-dts/t18x-common-modules
         FLASH_DT='kernel-dtb'
-        FLASH_BOARD='jetson-tx2'
+
+		FLASH_BOARD='jetson-xavier-nx-devkit-tx2-nx' ;
+		#FLASH_BOARD='jetson-tx2'
+        FLASH_PARTITION='mmcblk0p1'
+        ;;        
+		
+
+		TX2NX)
+        PATCHES+=('dt_camera_TX2_32.5.0+')
+        case $VC_MIPI_BSP in
+        32.5.0|32.5.1|32.5.2)
+                PATCHES+=('kernel_TX2_32.5.0+')
+                ;;
+        32.6.1|32.7.1|32.7.2)
+                PATCHES+=('kernel_TX2_32.6.1+')
+                ;;
+        esac
+
+		DT_CAM_FILE=$DT_CAM_DIR/CapableRobotsBaseboard_TX2NX/tegra186-camera-vc-mipi-cam.dtsi
+        DT_CAM_FILE_DST_DIR=$KERNEL_SOURCE/hardware/nvidia/platform/t18x/common/kernel-dts/t18x-common-modules
+        FLASH_DT='kernel-dtb'
+
+		FLASH_BOARD='jetson-xavier-nx-devkit-tx2-nx' ;
         FLASH_PARTITION='mmcblk0p1'
         ;;
+
 
         *)
         echo "SOM $VC_MIPI_SOM not supported!"

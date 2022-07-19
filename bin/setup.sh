@@ -87,14 +87,17 @@ setup_kernel() {
 }
 
 setup_bsp() {
-        echo "Setup board support package ..."
+		echo "Setup board support package 1 ..."
         mkdir -p $BUILD_DIR
         mkdir -p $DOWNLOAD_DIR
+		echo "Setup board support package  2 ..."
 
+		echo  $BSP_URL/$BSP_FILE
         cd $DOWNLOAD_DIR
         if [[ ! -e $BSP_FILE ]]; then 
                 wget $BSP_URL/$BSP_FILE
         fi
+		echo "Setup board support package 3 ..."
 
         cd $BUILD_DIR
         sudo rm -Rf Linux_for_Tegra
@@ -108,7 +111,8 @@ setup_bsp() {
         sudo tar xjvf $RFS_FILE -C $BUILD_DIR/Linux_for_Tegra/rootfs
 
         cd $BUILD_DIR/Linux_for_Tegra
-        sudo ./apply_binaries.sh
+		echo "sudo ./apply_binaries.sh"
+		sudo ./apply_binaries.sh
 }
 
 setup_camera() {

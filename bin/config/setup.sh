@@ -54,7 +54,8 @@ choose_som() {
                 echo "    5: NVIDIA Jetson Xavier NX (devkit) (https://developer.nvidia.com/embedded/jetson-xavier-nx)"
                 echo "    6: NVIDIA Jetson AGX Xavier (devkit) (https://developer.nvidia.com/embedded/jetson-agx-xavier-developer-kit)"
                 echo "    7: NVIDIA Jetson TX2 (devkit) (https://developer.nvidia.com/embedded/jetson-tx2-developer-kit)"
-                read_selection 1 7
+                echo "    8: NVIDIA Jetson TX2NX (CapableRobotaBaseboard) (https://capablerobot.com/products/nx-baseboard/)"
+                read_selection 1 8
         fi
         case ${selection} in
         1) som=Nano ;;
@@ -64,6 +65,7 @@ choose_som() {
         5) som=XavierNXSD ;;
         6) som=AGXXavier ;;
         7) som=TX2 ;;
+        8) som=TX2NX ;;
         esac
 }
 
@@ -124,6 +126,20 @@ choose_board_agx_tx2() {
         fi
         case ${selection} in
         1) board=Auvidea_J20 ;;
+        esac
+}
+
+choose_board_cr_tx2nx() {
+        if [[ -n ${selected_board} ]]; then
+                selection=${selected_board}
+        else
+                echo "------------------------------------------------------------"
+                echo "  Choose your carrier board"
+                echo "    1: Capable Robots Baseboard (https://capablerobot.com/products/nx-baseboard/)"
+                read_selection 1 1
+        fi
+        case ${selection} in
+        1) board=CapableRobotsBaseboard ;;
         esac
 }
 
@@ -229,8 +245,13 @@ setup_driver() {
         TX2)
                 choose_board_agx_tx2
                 choose_bsp
+                ;;    
+	TX2NX)
+                choose_board_cr_tx2nx
+                choose_bsp
                 ;;
         esac
+ 
         check_configuration $1 $2
         write_configuration
 }
