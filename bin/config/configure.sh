@@ -12,8 +12,9 @@ fi
 
 DOWNLOAD_DIR=$BUILD_DIR/downloads/$VC_MIPI_SOM/$VC_MIPI_BSP
 
-TARGET_USER=$USER
-TARGET_IP=
+#TARGET_USER=$USER
+TARGET_USER=sb3d
+TARGET_IP=192.168.1.24
 if [[ $1 == 'target' ]]; then
         . $BIN_DIR/config/setup.sh --target
 fi

@@ -30,6 +30,12 @@ cp ../src/devicetree/CapableRobotsBaseboard_TX2NX/tegra186-camera-vc-mipi-cam.dt
 echo "cp ../src/driver/tegra-v4l2-camera.h ../build/Linux_for_Tegra/source/public/kernel/nvidia/include/media/"
 cp ../src/driver/tegra-v4l2-camera.h ../build/Linux_for_Tegra/source/public/kernel/nvidia/include/media/
 
+cp -Ruv ../src/old_driver/*.c $DRIVER_DST_DIR
+cp -Ruv ../src/old_driver/*.h $DRIVER_DST_DIR
+
+
+
+
 		echo "Copying driver sources into kernel sources ..."
         cp -Ruv $DRIVER_DIR/* $DRIVER_DST_DIR
         cp -Ruv $DT_CAM_FILE $DT_CAM_FILE_DST_DIR
