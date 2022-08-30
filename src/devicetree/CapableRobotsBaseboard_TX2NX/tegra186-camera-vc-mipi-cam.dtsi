@@ -21,8 +21,17 @@
 // ------------------------------------------------------------------------------------------------
 //  Driver Configuration for NVIDIA Jetson TX2NX  on Capable Robots Baseboard 
 // ------------------------------------------------------------------------------------------------
-#define VC_MIPI_CAM_2       1   // 1: Enabled, 0: Disabled  (serial_c => CSI Port 2 => VI Stream 2)
-#define VC_MIPI_CAM_3       1   // 1: Enabled, 0: Disabled  (serial_e => CSI Port 4 => VI Stream 4)
+#define VC_MIPI_CAM_0       1   // 1: Enabled, 0: Disabled  (serial_a => CSI Port 0 => VI Stream 0)
+#define VC_MIPI_CAM_1       1   // 1: Enabled, 0: Disabled  (serial_e => CSI Port 4 => VI Stream 4)
+
+
+#define CAM0_TEGRA_SINTERFACE "serial_a"
+#define CAM0_PORT_INDEX	0
+
+#define CAM1_TEGRA_SINTERFACE "serial_e"
+#define CAM1_PORT_INDEX	4
+
+
 // ------------------------------------------------------------------------------------------------
 //  Supported number of lanes
 // -----+------------------------------------------------------------------------------------------
@@ -32,6 +41,8 @@
 //      | IMX412, IMX415, IMX568
 // -----+------------------------------------------------------------------------------------------
 #define VC_MIPI_LANES       4   // 1, 2, 4 Lanes
+
+
 // ------------------------------------------------------------------------------------------------
 //  Embedded Metadata Height
 // -----+------------------------------------------------------------------------------------------
@@ -40,13 +51,17 @@
 //  2   | IMX296, IMX297, IMX412
 // -----+------------------------------------------------------------------------------------------
 #define VC_MIPI_METADATA_H  "2" // "0", "1", "2" Lines of meta data
+
+
 // ------------------------------------------------------------------------------------------------
 //   Sensor Manufacturer
 // -----+------------------------------------------------------------------------------------------
 //   1  | Sony Sensor (IMX)
 //   2  | Omni Vision Sensor (OV)
 // -----+------------------------------------------------------------------------------------------
-//#define VC_MIPI_MANUFACTURER 1 removed always sony
+#define VC_MIPI_MANUFACTURER 1
+
+
 // ------------------------------------------------------------------------------------------------
 //  GStreamer Support
 // ------------------------------------------------------------------------------------------------
@@ -56,11 +71,6 @@
 //  this repository https://github.com/VC-MIPI-modules/vc_mipi_nvidia#gstreamer-support
 // ------------------------------------------------------------------------------------------------
 
-#define CAM0_TEGRA_SINTERFACE "serial_a"
-#define CAM0_PORT_INDEX	0
-
-#define CAM1_TEGRA_SINTERFACE "serial_e"
-#define CAM1_PORT_INDEX	4
 
 
 
@@ -80,7 +90,7 @@
     #define NUM_CSI_LANES 8
 #endif
 
-#if VC_MIPI_CAM_2 == 1 && VC_MIPI_CAM_3 == 1
+#if VC_MIPI_CAM_0 == 1 && VC_MIPI_CAM_1 == 1
     #define VC_MIPI_CAMERAS 2
 #else
     #define VC_MIPI_CAMERAS 1
@@ -94,6 +104,7 @@
             ports {
                 #address-cells = <1>;
                 #size-cells = <0>;
+#if VC_MIPI_CAM_0 == 1
                 vc_vi_port0: port@0 {
                     reg = <0>;
                     vc_vi_in0: endpoint {
@@ -102,6 +113,8 @@
                         remote-endpoint = <&vc_csi_out0>;
                     };
                 };
+#endif
+#if VC_MIPI_CAM_1 == 1
 				vc_vi_port1: port@1 {
                     reg = <1>;
                     vc_vi_in1: endpoint {
@@ -110,6 +123,7 @@
                         remote-endpoint = <&vc_csi_out1>;
 					};
 				};
+#endif
             };
         };
 
@@ -118,10 +132,10 @@
             #address-cells = <1>;
             #size-cells = <0>;
 
+#if VC_MIPI_CAM_0 == 1
             vc_csi_chan0: channel@0 {
                 reg = <0>;
                 ports {
-					status = "okay";
                     #address-cells = <1>;
                     #size-cells = <0>;
                     vc_csi_chan0_port0: port@0 {
@@ -141,17 +155,16 @@
                     };
                 };
             };
+#endif
 
+#if VC_MIPI_CAM_1 == 1
             vc_csi_chan1: channel@1 {
-				status = "okay";
                 reg = <1>;
                 ports {
-                    status = "okay";
-                    #address-cells = <1>;
+                     #address-cells = <1>;
                     #size-cells = <0>;
 					vc_csi_chan1_port0: port@0 {
-                        status = "okay";
-                        reg = <0>;
+                         reg = <0>;
 						vc_csi_in1: endpoint@0 {
 							port-index = <CAM1_PORT_INDEX>;
                             bus-width = <BUS_WIDTH>;
@@ -166,6 +179,7 @@
                     };
                 };
             };
+#endif
 		};
 	};
 
@@ -179,6 +193,9 @@
 			#size-cells = <0>;
 			vcc-supply = <&battery_reg>;
 			force_bus_start = <CAMERA_I2C_MUX_BUS(0)>;
+			i2c-parent = <&cam_i2c>;
+
+#if VC_MIPI_CAM_0 == 1
 			i2c@2{
 				status = "okay";
 				reg = <2>;
@@ -186,10 +203,14 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 
+#if VC_MIPI_MANUFACTURER == 1
 				vc_mipi_cam0: vc_mipi@1a {
-                	status = "okay";
-					reg                     = <0x1a>;
-					compatible              = "nvidia,vc_mipi";
+ 					reg                     = <0x1a>;
+#else
+            vc_mipi_cam0: vc_mipi@60 {
+                reg                     = <0x60>;
+#endif
+                compatible              = "nvidia,vc_mipi";
 
 					devnode                 = "video0";
 					use_sensor_mode_id      = "false";
@@ -210,15 +231,15 @@
 					// You don't have to change any settings if just want to use the V4L API.
 					mode0 {
 						num_lanes                = NUM_LANES;
-						tegra_sinterface         = "serial_a";
+                    	tegra_sinterface         = CAM0_TEGRA_SINTERFACE;
 						embedded_metadata_height = VC_MIPI_METADATA_H;
 						readout_orientation      = "0";
 
 						// ----------------------------------------------------
 						// If you want to use GStreamer with nvarguscamerasrc
 						// you have to adjust this settings.
-						active_l                 = "0";
 						active_t                 = "0";
+						active_l                 = "0";
 						active_w                 = "4032";
 						active_h                 = "3040";
 						pixel_t                  = "bayer_rggb";
@@ -234,7 +255,7 @@
 						default_exp_time         = "10000";     // us
 
                     	min_framerate            = "0";         // mHz
-						max_framerate            = "61000";     // mHz
+                    	max_framerate            = "60000";     // mHz
 						step_framerate           = "100";       // mHz
 						default_framerate        = "60000";     // mHz
 						// ----------------------------------------------------
@@ -271,6 +292,9 @@
 					};
 				};
 			};
+#endif
+
+#if VC_MIPI_CAM_1 == 1
 			i2c@3{
 				status = "okay";
 				reg = <3>;
@@ -278,11 +302,14 @@
 				#address-cells = <1>;
 				#size-cells = <0>;
 
+#if VC_MIPI_MANUFACTURER == 1
 				vc_mipi_cam1: vc_mipi@1a {
-               		status = "okay";
 					reg = <0x1a>;
-					i2c-mux,deselect-on-exit;
-					compatible              = "nvidia,vc_mipi";
+#else
+            vc_mipi_cam1: vc_mipi@60 {
+                reg                     = <0x60>;
+#endif
+                compatible              = "nvidia,vc_mipi";
 					devnode                 = "video1";
 					use_sensor_mode_id      = "false";
 					sensor_model            = "vc_mipi";
@@ -302,7 +329,7 @@
 					// You don't have to change any settings if just want to use the V4L API.
 					mode0 {
 						num_lanes                = NUM_LANES;
-						tegra_sinterface         = "serial_c";
+						tegra_sinterface         = CAM1_TEGRA_SINTERFACE;
 						embedded_metadata_height = VC_MIPI_METADATA_H;
 						readout_orientation      = "0";
 
@@ -315,18 +342,18 @@
 						active_h                 = "3040";
 						pixel_t                  = "bayer_rggb";
 
-						min_gain_val             = "100";         // mdB
+						min_gain_val             = "0";         // mdB
 						max_gain_val             = "48000";     // mdB
 						step_gain_val            = "100";       // mdB
-						default_gain             = "100";         // mdB
+						default_gain             = "0";         // mdB
 
 						min_exp_time             = "1";         // us
 						max_exp_time             = "1000000";   // us
 						step_exp_time            = "1";         // us
 						default_exp_time         = "10000";     // us
 
-						min_framerate            = "100";         // mHz
-						max_framerate            = "61000";     // mHz
+						min_framerate            = "0";         // mHz
+						max_framerate            = "60000";     // mHz
 						step_framerate           = "100";       // mHz
 						default_framerate        = "60000";     // mHz
 						// ----------------------------------------------------
@@ -349,13 +376,10 @@
 					};
 
 					ports {
-
 						#address-cells = <1>;
 						#size-cells = <0>;
 						port@0 {
-							status = "okay";
 							reg = <0>;
-
 							vc_mipi_out1: endpoint {
 								port-index = <CAM1_PORT_INDEX>;
 								bus-width = <BUS_WIDTH>;
@@ -365,8 +389,16 @@
 					};
 				};
 			};
+#endif
 		};
 	};
+    lens@vc_mipi {
+        min_focus_distance  = "0.0";
+        hyper_focal         = "0.0";
+        focal_length        = "6.0";
+        f_number            = "2.0";
+        aperture            = "0.0";
+    };
 };
 
 / {
@@ -383,6 +415,7 @@
         isp_bw_margin_pct = <25>;
 
         modules {
+#if VC_MIPI_CAM_0 == 1
             cam_module0: module0 {
                 status = "okay";
 				badge = "lenai_front_vc_mipi";
@@ -391,11 +424,23 @@
                 cam_module0_drivernode0: drivernode0 {
                     status = "okay";
                     pcl_id = "v4l2_sensor";
+#if VC_MIPI_MANUFACTURER == 1
 					devname = "vc_mipi 32-001a";
 					proc-device-tree = "/proc/device-tree/i2c@3180000/pca9547@70/i2c@2/vc_mipi@1a";
 
+#else
+					devname = "vc_mipi 32-0060";
+                    proc-device-tree = "/proc/device-tree/cam_i2cmux/i2c@0/vc_mipi@60";
+#endif
                 };
+                cam_module0_drivernode1: drivernode1 {
+                    status = "okay";
+                    pcl_id = "v4l2_lens";
+                    proc-device-tree = "/proc/device-tree/lens@vc_mipi/";
             };
+            };
+#endif
+#if VC_MIPI_CAM_1 == 1
             cam_module1: module1 {
 				status = "okay";
 				badge = "lanai_rear_vc_mipi";
@@ -404,13 +449,22 @@
                 cam_module1_drivernode0: drivernode0 {
                     status = "okay";
                     pcl_id = "v4l2_sensor";
+#if VC_MIPI_MANUFACTURER == 1
 					devname = "vc_mipi 33-001a";
 					proc-device-tree = "/proc/device-tree/i2c@3180000/pca9547@70/i2c@3/vc_mipi@1a";
-
+#else
+                    devname = "vc_mipi 10-0060";
+                    proc-device-tree = "/proc/device-tree/cam_i2cmux/i2c@1/vc_mipi@60";
+#endif
+                };
+                cam_module1_drivernode1: drivernode1 {
+                    status = "okay";
+                    pcl_id = "v4l2_lens";
+                    proc-device-tree = "/proc/device-tree/lens@vc_mipi/";
                 };
             };
+#endif
         };
     };
 };
-
 
