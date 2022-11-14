@@ -18,6 +18,17 @@
 #include "dt-bindings/clock/tegra186-clock.h"
 #define CAMERA_I2C_MUX_BUS(x) (0x1E + x)
 
+//#define UNIT_1 // unit 1 has vesion 1 of the CapableRobots baseboard.
+				// This uses a different i2c mux chip.  We only have 1 of these boards.
+
+#ifndef UNIT_1
+	#define I2C_MUX_CHIP "nxp,pca9547"
+#else
+ // unit 1 uses a pca9548
+	#define I2C_MUX_CHIP "nxp,pca9548"
+#endif
+
+
 // ------------------------------------------------------------------------------------------------
 //  Driver Configuration for NVIDIA Jetson TX2NX  on Capable Robots Baseboard 
 // ------------------------------------------------------------------------------------------------
@@ -186,7 +197,7 @@
 
     i2c@3180000 {
 		pca9547@70 {
-			compatible = "nxp,pca9547"; // unit 1 change to pca9548
+			compatible = I2C_MUX_CHIP; // unit 1 uses pca9548 all others use pca9587
 			status = "okay";
 			reg = <0x70>;
 			#address-cells = <1>;
@@ -231,8 +242,10 @@
 					// You don't have to change any settings if just want to use the V4L API.
 					mode0 {
 						num_lanes                = NUM_LANES;
-                    	tegra_sinterface         = CAM0_TEGRA_SINTERFACE;
+						tegra_sinterface         = CAM0_TEGRA_SINTERFACE;
 						embedded_metadata_height = VC_MIPI_METADATA_H;
+
+
 						readout_orientation      = "0";
 
 						// ----------------------------------------------------
@@ -255,7 +268,7 @@
 						default_exp_time         = "10000";     // us
 
                     	min_framerate            = "0";         // mHz
-                    	max_framerate            = "60000";     // mHz
+						max_framerate            = "60000";     // mHz
 						step_framerate           = "100";       // mHz
 						default_framerate        = "60000";     // mHz
 						// ----------------------------------------------------
@@ -331,6 +344,8 @@
 						num_lanes                = NUM_LANES;
 						tegra_sinterface         = CAM1_TEGRA_SINTERFACE;
 						embedded_metadata_height = VC_MIPI_METADATA_H;
+
+
 						readout_orientation      = "0";
 
 						// ----------------------------------------------------

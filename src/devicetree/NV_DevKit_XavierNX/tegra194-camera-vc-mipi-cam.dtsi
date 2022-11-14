@@ -19,10 +19,10 @@
 #define CAMERA_I2C_MUX_BUS(x) (0x1E + x)
 
 // ------------------------------------------------------------------------------------------------
-//  Driver Configuration for NVIDIA Jetson Xavier NX on NVIDIA Jetson Xavier NX Developer Kit
+//  Driver Configuration for NVIDIA Jetson Xavier NX on Capable Robots Baseboard 
 // ------------------------------------------------------------------------------------------------
 #define VC_MIPI_CAM_0       1   // 1: Enabled, 0: Disabled  (serial_a => CSI Port 0 => VI Stream 0)
-#define VC_MIPI_CAM_1       1   // 1: Enabled, 0: Disabled  (serial_c => CSI Port 2 => VI Stream 2)
+#define VC_MIPI_CAM_1       1   // 1: Enabled, 0: Disabled  (serial_e => CSI Port 4 => VI Stream 4)
 
 #define CAM0_TEGRA_SINTERFACE "serial_a"
 #define CAM0_PORT_INDEX	0
