@@ -109,7 +109,7 @@
 
 / {
 	host1x {
-		sb3d_version = "1.4";
+		sb3d_version = "1.5";
         vc_vi_base: vi@15700000 {
 			num-channels = <VC_MIPI_CAMERAS>;
             ports {
@@ -244,9 +244,15 @@
 						num_lanes                = NUM_LANES;
 						tegra_sinterface         = CAM0_TEGRA_SINTERFACE;
 						embedded_metadata_height = VC_MIPI_METADATA_H;
+						phy_mode = "DPHY";
+						discontinuous_clk = "no"; // "yes";
+						dpcm_enable = "false";
+						cil_settletime = "0";
 
-
-						readout_orientation      = "0";
+						mclk_khz                 = "24000";
+						pix_clk_hz               = "800000000";
+						mclk_multiplier          = "9.33";
+						readout_orientation      = "90";
 
 						// ----------------------------------------------------
 						// If you want to use GStreamer with nvarguscamerasrc
@@ -256,39 +262,84 @@
 						active_w                 = "4032";
 						active_h                 = "3040";
 						pixel_t                  = "bayer_rggb";
+						line_length = "4184";
 
-                    	min_gain_val             = "0";         // mdB
+						inherent_gain            = "1";
+						gain_factor              = "1000";
+						min_gain_val             = "0";         // mdB
 						max_gain_val             = "48000";     // mdB
-						step_gain_val            = "100";       // mdB
-                    	default_gain             = "0";         // mdB
+						step_gain_val            = "1";       // mdB
+						default_gain             = "0";         // mdB
 
+						exposure_factor          = "1000000";
 						min_exp_time             = "1";         // us
 						max_exp_time             = "1000000";   // us
 						step_exp_time            = "1";         // us
-						default_exp_time         = "10000";     // us
+						default_exp_time         = "4000";     // us
 
-                    	min_framerate            = "0";         // mHz
-						max_framerate            = "60000";     // mHz
-						step_framerate           = "100";       // mHz
-						default_framerate        = "60000";     // mHz
+						framerate_factor         = "1000000";
+						min_framerate            = "4000000";         // mHz
+						max_framerate            = "60000000";     // mHz
+						step_framerate           = "1";       // mHz
+						default_framerate        = "40000000";     // mHz
 						// ----------------------------------------------------
 
-						gain_factor              = "1000";
-						exposure_factor          = "1000000";
-						framerate_factor         = "1000";
-						inherent_gain            = "1";
 						min_hdr_ratio            = "1";
 						max_hdr_ratio            = "1";
 
-						line_length              = "4184";
-						phy_mode                 = "DPHY";
-						discontinuous_clk        = "no";
-						mclk_khz                 = "24000";
+					};
+
+
+					mode1 {
+						num_lanes                = NUM_LANES;
+						tegra_sinterface         = CAM0_TEGRA_SINTERFACE;
+						embedded_metadata_height = VC_MIPI_METADATA_H;
+						phy_mode = "DPHY";
+						discontinuous_clk = "no"; // "yes";
+						dpcm_enable = "false";
+						cil_settletime = "0";
+
+						mclk_khz                 = "48000";
 						pix_clk_hz               = "800000000";
 						mclk_multiplier          = "9.33";
-						cil_settletime           = "0";
-						dpcm_enable              = "false";
+						readout_orientation      = "90";
+
+						// ----------------------------------------------------
+						// If you want to use GStreamer with nvarguscamerasrc
+						// you have to adjust this settings.
+						active_t                 = "740";  // (3840 - 2360) / 2
+						active_l                 = "96";   // (4032 - 3840) / 2
+						active_w                 = "4032";  // HD is 3840 x 2160
+						active_h                 = "2360";   // limit vertical region to improve framerate;
+						pixel_t                  = "bayer_rggb";
+						line_length = "4184";
+
+						inherent_gain            = "1";
+						gain_factor              = "1000";
+						min_gain_val             = "0";         // mdB
+						max_gain_val             = "48000";     // mdB
+						step_gain_val            = "1";         // mdB
+						default_gain             = "0";         // mdB
+
+						exposure_factor          = "1000000";
+						min_exp_time             = "1";         // us
+						max_exp_time             = "1000000";   // us
+						step_exp_time            = "1";         // us
+						default_exp_time         = "4000";      // us
+
+						framerate_factor         = "1000000";
+						min_framerate            = "4000000";      // mHz
+						max_framerate            = "60000000";     // mHz
+						step_framerate           = "1";            // mHz
+						default_framerate        = "40000000";     // mHz
+						// ----------------------------------------------------
+
+						min_hdr_ratio            = "1";
+						max_hdr_ratio            = "1";
+
 					};
+
+
 
 					ports {
 						#address-cells = <1>;
@@ -344,50 +395,98 @@
 						num_lanes                = NUM_LANES;
 						tegra_sinterface         = CAM1_TEGRA_SINTERFACE;
 						embedded_metadata_height = VC_MIPI_METADATA_H;
+						phy_mode = "DPHY";
+						discontinuous_clk = "no"; // "yes";
+						dpcm_enable = "false";
+						cil_settletime = "0";
 
-
+						mclk_khz                 = "24000";
+						pix_clk_hz               = "800000000";
+						mclk_multiplier          = "9.33";
 						readout_orientation      = "0";
 
 						// ----------------------------------------------------
 						// If you want to use GStreamer with nvarguscamerasrc
 						// you have to adjust this settings.
-						active_l                 = "0";
 						active_t                 = "0";
+						active_l                 = "0";
 						active_w                 = "4032";
 						active_h                 = "3040";
 						pixel_t                  = "bayer_rggb";
+						line_length              = "4184";
 
+						inherent_gain            = "1";
+						gain_factor              = "1000";
 						min_gain_val             = "0";         // mdB
 						max_gain_val             = "48000";     // mdB
-						step_gain_val            = "100";       // mdB
+						step_gain_val            = "1";       // mdB
 						default_gain             = "0";         // mdB
 
+						exposure_factor          = "1000000";
 						min_exp_time             = "1";         // us
 						max_exp_time             = "1000000";   // us
 						step_exp_time            = "1";         // us
 						default_exp_time         = "10000";     // us
 
-						min_framerate            = "0";         // mHz
-						max_framerate            = "60000";     // mHz
-						step_framerate           = "100";       // mHz
-						default_framerate        = "60000";     // mHz
+						framerate_factor         = "1000000";
+						min_framerate            = "4000000";      // mHz
+						max_framerate            = "60000000";     // mHz
+						step_framerate           = "1";            // mHz
+						default_framerate        = "40000000";     // mHz
+
 						// ----------------------------------------------------
 
-						gain_factor              = "1000";
-						exposure_factor          = "1000000";
-						framerate_factor         = "1000";
-						inherent_gain            = "1";
 						min_hdr_ratio            = "1";
 						max_hdr_ratio            = "1";
+					};
 
-						line_length              = "0";
-						phy_mode                 = "DPHY";
-						discontinuous_clk        = "no";
+					mode1 {
+						num_lanes                = NUM_LANES;
+						tegra_sinterface         = CAM1_TEGRA_SINTERFACE;
+						embedded_metadata_height = VC_MIPI_METADATA_H;
+						phy_mode = "DPHY";
+						discontinuous_clk = "no"; // "yes";
+						dpcm_enable = "false";
+						cil_settletime = "0";
+
 						mclk_khz                 = "24000";
 						pix_clk_hz               = "800000000";
 						mclk_multiplier          = "9.33";
-						cil_settletime           = "0";
-						dpcm_enable              = "false";
+						readout_orientation      = "0";
+
+						// ----------------------------------------------------
+						// If you want to use GStreamer with nvarguscamerasrc
+						// you have to adjust this settings.
+						active_t                 = "740";  // (3840 - 2360) / 2
+						active_l                 = "96";   // (4032 - 3840) / 2
+						active_w                 = "4032";  // HD is 3840 x 2160
+						active_h                 = "2360";   // limit vertical region to improve framerate;
+						pixel_t                  = "bayer_rggb";
+						line_length = "4184";
+
+						inherent_gain            = "1";
+						gain_factor              = "1000";
+						min_gain_val             = "0";         // mdB
+						max_gain_val             = "48000";     // mdB
+						step_gain_val            = "1";       // mdB
+						default_gain             = "0";         // mdB
+
+						exposure_factor          = "1000000";
+						min_exp_time             = "1";         // us
+						max_exp_time             = "1000000";   // us
+						step_exp_time            = "1";         // us
+						default_exp_time         = "10000";     // us
+
+						framerate_factor         = "1000000";
+						min_framerate            = "4000000";      // mHz
+						max_framerate            = "60000000";     // mHz
+						step_framerate           = "1";            // mHz
+						default_framerate        = "40000000";     // mHz
+
+						// ----------------------------------------------------
+
+						min_hdr_ratio            = "1";
+						max_hdr_ratio            = "1";
 					};
 
 					ports {
