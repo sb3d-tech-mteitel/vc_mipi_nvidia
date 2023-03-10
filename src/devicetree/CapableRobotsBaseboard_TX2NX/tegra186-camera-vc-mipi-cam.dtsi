@@ -109,7 +109,7 @@
 
 / {
 	host1x {
-		sb3d_version = "1.5";
+		sb3d_version = "1.52";
         vc_vi_base: vi@15700000 {
 			num-channels = <VC_MIPI_CAMERAS>;
             ports {
@@ -266,22 +266,22 @@
 
 						inherent_gain            = "1";
 						gain_factor              = "1000";
-						min_gain_val             = "0";         // mdB
-						max_gain_val             = "48000";     // mdB
-						step_gain_val            = "1";       // mdB
-						default_gain             = "0";         // mdB
+						min_gain_val             = "1";         // mdB
+						max_gain_val             = "45000";     // mdB
+						step_gain_val            = "14";        // mdB
+						default_gain             = "1";         // mdB
 
-						exposure_factor          = "1000000";
+						exposure_factor          = "1000";
 						min_exp_time             = "1";         // us
-						max_exp_time             = "1000000";   // us
+						max_exp_time             = "529048";    // us  1/40 second
 						step_exp_time            = "1";         // us
-						default_exp_time         = "4000";     // us
+						default_exp_time         = "10000";     // us
 
-						framerate_factor         = "1000000";
-						min_framerate            = "4000000";         // mHz
-						max_framerate            = "60000000";     // mHz
-						step_framerate           = "1";       // mHz
-						default_framerate        = "40000000";     // mHz
+						framerate_factor         = "1000";
+						min_framerate            = "1000";         // mHz
+						max_framerate            = "40057";     // mHz
+						step_framerate           = "100";       // mHz
+						default_framerate        = "40057";     // mHz
 						// ----------------------------------------------------
 
 						min_hdr_ratio            = "1";
@@ -299,7 +299,7 @@
 						dpcm_enable = "false";
 						cil_settletime = "0";
 
-						mclk_khz                 = "48000";
+						mclk_khz                 = "24000";
 						pix_clk_hz               = "800000000";
 						mclk_multiplier          = "9.33";
 						readout_orientation      = "90";
@@ -316,29 +316,28 @@
 
 						inherent_gain            = "1";
 						gain_factor              = "1000";
-						min_gain_val             = "0";         // mdB
-						max_gain_val             = "48000";     // mdB
-						step_gain_val            = "1";         // mdB
-						default_gain             = "0";         // mdB
+						min_gain_val             = "1";         // mdB
+						max_gain_val             = "45000";     // mdB
+						step_gain_val            = "14";         // mdB
+						default_gain             = "1";         // mdB
 
-						exposure_factor          = "1000000";
+						exposure_factor          = "1000";
 						min_exp_time             = "1";         // us
-						max_exp_time             = "1000000";   // us
+						max_exp_time             = "529048";   // us
 						step_exp_time            = "1";         // us
-						default_exp_time         = "4000";      // us
+						default_exp_time         = "1000";      // us
 
-						framerate_factor         = "1000000";
-						min_framerate            = "4000000";      // mHz
-						max_framerate            = "60000000";     // mHz
-						step_framerate           = "1";            // mHz
-						default_framerate        = "40000000";     // mHz
+						framerate_factor         = "1000";
+						min_framerate            = "1000";      // mHz
+						max_framerate            = "60000";     // mHz
+						step_framerate           = "100";            // mHz
+						default_framerate        = "60000";     // mHz
 						// ----------------------------------------------------
 
 						min_hdr_ratio            = "1";
 						max_hdr_ratio            = "1";
 
 					};
-
 
 
 					ports {
@@ -391,6 +390,9 @@
 
 					// This node is needed by the Tegra framework.
 					// You don't have to change any settings if just want to use the V4L API.
+
+
+
 					mode0 {
 						num_lanes                = NUM_LANES;
 						tegra_sinterface         = CAM1_TEGRA_SINTERFACE;
@@ -413,27 +415,26 @@
 						active_w                 = "4032";
 						active_h                 = "3040";
 						pixel_t                  = "bayer_rggb";
-						line_length              = "4184";
+						line_length = "4184";
 
 						inherent_gain            = "1";
 						gain_factor              = "1000";
-						min_gain_val             = "0";         // mdB
-						max_gain_val             = "48000";     // mdB
-						step_gain_val            = "1";       // mdB
-						default_gain             = "0";         // mdB
+						min_gain_val             = "1";         // mdB
+						max_gain_val             = "47000";     // mdB
+						step_gain_val            = "14";        // mdB
+						default_gain             = "1";         // mdB
 
-						exposure_factor          = "1000000";
+						exposure_factor          = "1000";
 						min_exp_time             = "1";         // us
-						max_exp_time             = "1000000";   // us
+						max_exp_time             = "529048";    // us  1/40 second
 						step_exp_time            = "1";         // us
 						default_exp_time         = "10000";     // us
 
-						framerate_factor         = "1000000";
-						min_framerate            = "4000000";      // mHz
-						max_framerate            = "60000000";     // mHz
-						step_framerate           = "1";            // mHz
-						default_framerate        = "40000000";     // mHz
-
+						framerate_factor         = "1000";
+						min_framerate            = "1000";         // mHz
+						max_framerate            = "40057";     // mHz
+						step_framerate           = "100";       // mHz
+						default_framerate        = "40057";     // mHz
 						// ----------------------------------------------------
 
 						min_hdr_ratio            = "1";
@@ -466,22 +467,22 @@
 
 						inherent_gain            = "1";
 						gain_factor              = "1000";
-						min_gain_val             = "0";         // mdB
-						max_gain_val             = "48000";     // mdB
-						step_gain_val            = "1";       // mdB
-						default_gain             = "0";         // mdB
+						min_gain_val             = "1";         // mdB
+						max_gain_val             = "45000";     // mdB
+						step_gain_val            = "14";       // mdB
+						default_gain             = "1";         // mdB
 
-						exposure_factor          = "1000000";
+						exposure_factor          = "1000";
 						min_exp_time             = "1";         // us
-						max_exp_time             = "1000000";   // us
+						max_exp_time             = "529048";   // us
 						step_exp_time            = "1";         // us
-						default_exp_time         = "10000";     // us
+						default_exp_time         = "1000";     // us
 
-						framerate_factor         = "1000000";
-						min_framerate            = "4000000";      // mHz
-						max_framerate            = "60000000";     // mHz
-						step_framerate           = "1";            // mHz
-						default_framerate        = "40000000";     // mHz
+						framerate_factor         = "1000";
+						min_framerate            = "1000";      // mHz
+						max_framerate            = "60000";     // mHz
+						step_framerate           = "100";            // mHz
+						default_framerate        = "60000";     // mHz
 
 						// ----------------------------------------------------
 
