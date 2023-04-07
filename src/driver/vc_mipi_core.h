@@ -8,6 +8,9 @@
 #include <linux/videodev2.h>
 
 #define vc_dbg(dev, fmt, ...) dev_dbg(dev, fmt, ##__VA_ARGS__)
+#define sb3d_notice(dev, fmt, ...) dev_dbg(dev, fmt, ##__VA_ARGS__)
+//#define vc_dbg(dev, fmt, ...) dev_notice(dev, fmt, ##__VA_ARGS__)
+
 #define vc_info(dev, fmt, ...) dev_info(dev, fmt, ##__VA_ARGS__)
 #define vc_notice(dev, fmt, ...) dev_notice(dev, fmt, ##__VA_ARGS__)
 #define vc_warn(dev, fmt, ...) dev_warn(dev, fmt, ##__VA_ARGS__)

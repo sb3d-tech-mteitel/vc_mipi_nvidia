@@ -30,6 +30,7 @@ flash_all() {
 
 flash_kernel() {
         scp $KERNEL_OUT/arch/arm64/boot/Image $TARGET_USER@$TARGET_IP:/tmp
+		echo scp $KERNEL_OUT/arch/arm64/boot/Image $TARGET_USER@$TARGET_IP:/tmp
 }
 
 flash_device_tree() {

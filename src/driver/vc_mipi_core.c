@@ -201,7 +201,7 @@ int vc_write_i2c_reg(struct i2c_client *client, const __u16 addr, const __u8 val
 static void vc_core_print_desc(struct device *dev, struct vc_desc *desc)
 {
 	int is_color = vc_mod_is_color_sensor(desc);
-
+	vc_notice (dev,"SB3D V0.02");
 	vc_notice(dev, "+--- VC MIPI Camera -----------------------------------+\n");
 	vc_notice(dev, "| MANUF. | %s               MID: 0x%04x |\n", desc->manuf, desc->manuf_id);
 	vc_notice(dev, "| MODULE | ID:  0x%04x                     REV:   %04u |\n", desc->mod_id, desc->mod_rev);
@@ -589,10 +589,11 @@ __u32 vc_core_get_optimized_vmax(struct vc_cam *cam)
 	
 	// Increase the frame rate when image height is reduced.
 	if (ctrl->flags & FLAG_INCREASE_FRAME_RATE && state->frame.height < ctrl->frame.height) {
-		return ctrl->vmax.def - (ctrl->frame.height - state->frame.height);
 
 		vc_notice(dev, "%s(): Increased frame rate: vmax %u/%u, height: %u/%u\n", __FUNCTION__, 
 			state->vmax, ctrl->vmax.def, state->frame.height, ctrl->frame.height);
+
+		return ctrl->vmax.def - (ctrl->frame.height - state->frame.height);
 	}
 
 	return ctrl->vmax.def;
@@ -854,7 +855,7 @@ static int vc_mod_write_exposure(struct i2c_client *client, __u32 value)
 	struct device *dev = &client->dev;
 	int ret;
 
-	vc_dbg(dev, "%s(): Write module exposure = 0x%08x (%u)\n", __FUNCTION__, value, value);
+	sb3d_notice(dev, "%s(): Write module exposure = 0x%08x (%u)\n", __FUNCTION__, value, value);
 
 	ret  = i2c_write_reg(dev, client, MOD_REG_EXPO_L, L_BYTE(value), __FUNCTION__);
 	ret |= i2c_write_reg(dev, client, MOD_REG_EXPO_M, M_BYTE(value), __FUNCTION__);
@@ -1250,7 +1251,7 @@ static int vc_sen_write_shs(struct vc_ctrl *ctrl, __u32 shs)
 	struct i2c_client *client = ctrl->client_sen;
 	struct device *dev = &client->dev;
 
-	vc_dbg(dev, "%s(): Write sensor SHS: 0x%08x (%u)\n", __FUNCTION__, shs, shs);
+	sb3d_notice(dev, "%s(): Write sensor SHS: 0x%08x (%u)\n", __FUNCTION__, shs, shs);
 
 	return i2c_write_reg4(dev, client, &ctrl->csr.sen.shs, shs, __FUNCTION__);
 }
@@ -1430,7 +1431,7 @@ static void vc_core_calculate_vmax(struct vc_cam *cam, __u32 period_1H_ns)
 			state->vmax = frametime_1H;
 		}
 
-		vc_dbg(dev, "%s(): framerate: %u mHz, frametime: %llu ns, %llu 1H\n", __FUNCTION__, 
+		sb3d_notice(dev, "%s(): framerate: %u mHz, frametime: %llu ns, %llu 1H\n", __FUNCTION__,
 			state->framerate, frametime_ns, frametime_1H);
 	}
 }
@@ -1473,6 +1474,10 @@ static void vc_calculate_exposure_normal(struct vc_cam *cam, __u64 exposure_1H)
 	struct vc_ctrl *ctrl = &cam->ctrl;
 	struct vc_state *state = &cam->state;
         __u32 shs_min = ctrl->vmax.min;
+		struct device *dev = &ctrl->client_sen->dev;
+
+		sb3d_notice(dev, "%s() entry: shs_min: %d, exposure_1H: %llu, (__u32)exposure_1H %d, state->vmax: %d \n"
+					, __FUNCTION__, shs_min,     exposure_1H,  (__u32) exposure_1H,   state->vmax);
 
 	// Is exposure time greater than shs_min and less than frame time?
 	if (shs_min <= exposure_1H && exposure_1H < state->vmax) {
@@ -1482,20 +1487,28 @@ static void vc_calculate_exposure_normal(struct vc_cam *cam, __u64 exposure_1H)
 		// | exposure time ---> SHS |                           |
 		state->shs = exposure_1H;
 	
-	} else if (exposure_1H < shs_min) {
+	}
+	else if (exposure_1H < shs_min) {
                 // Yes, then set shs equal to shs_min
 		// |                 VMAX (frame time)             ---> |
 		// +----------------------------+-----------------------+
                 // | SHS_MIN |                                          |
                 state->shs = shs_min;
 
-        } else {
-                // |                 VMAX (frame time)                   ---> |
+		}
+	else {
+		// |                 VMAX (frame time)                   ---> |
 		// +----------------------------------------------------------+
 		// |                                       exposure time ---> | 
 		state->vmax = exposure_1H;
 		state->shs = exposure_1H;
 	}
+
+
+
+	sb3d_notice(dev, "%s(): vmax: %d, exposure: %d\n", __FUNCTION__, state->vmax,state->shs);
+
+
 }
 
 static void vc_calculate_exposure(struct vc_cam *cam, __u32 exposure)
@@ -1505,18 +1518,35 @@ static void vc_calculate_exposure(struct vc_cam *cam, __u32 exposure)
 	struct device *dev = &ctrl->client_sen->dev;
 	__u8 num_lanes = state->num_lanes;
 	__u8 format = vc_core_v4l2_code_to_format(state->format_code);
-	__u32 period_1H_ns = 0;
-        __u64 exposure_ns;
+	__u64 period_1H_ns = 0;
+	__u64 exposure_ns;
 	__u64 exposure_1H;
-	
-	period_1H_ns = vc_core_calculate_timing(cam, num_lanes, format);
-        vc_core_calculate_vmax(cam, period_1H_ns);
 
-        // Convert exposure time from µs to ns.
+	sb3d_notice(dev, "%s(): exposure: %d \n", __FUNCTION__, exposure);
+
+	period_1H_ns = vc_core_calculate_timing(cam, num_lanes, format);
+
+	vc_core_calculate_vmax(cam, period_1H_ns);
+
+
+
+
+	// Convert exposure time from µs to ns.
 	exposure_ns = (__u64)(exposure)*1000;
+
+
+
+
+
+
 	// Calculate number of lines equivalent to the exposure time without shs_min.
+
 	exposure_1H = exposure_ns / period_1H_ns;
-	
+
+	sb3d_notice(dev, "%s(): exposure_1H %llu = exposure_ns %llu / period_1H_ns %llu \n"
+			, __FUNCTION__, exposure_1H,     exposure_ns,       period_1H_ns );
+
+
         if (ctrl->flags & FLAG_EXPOSURE_SONY) {
                 vc_calculate_exposure_sony(cam, exposure_1H);
 
@@ -1524,8 +1554,8 @@ static void vc_calculate_exposure(struct vc_cam *cam, __u32 exposure)
                 vc_calculate_exposure_normal(cam, exposure_1H);
         } 
 
-	vc_dbg(dev, "%s(): flags: 0x%04x, period_1H_ns: %u, shs: %u/%u, vmax: %u/%u\n", __FUNCTION__, 
-		ctrl->flags, period_1H_ns, state->shs, ctrl->vmax.min, state->vmax, ctrl->vmax.def);
+		sb3d_notice(dev, "%s(): flags: 0x%04x, period_1H_ns: %llu, shs: %u/vmax.min: %u, vmax: %u/%u\n", __FUNCTION__,
+							 ctrl->flags,    period_1H_ns,state->shs, ctrl->vmax.min, state->vmax, ctrl->vmax.def);
 }
 
 int vc_sen_set_exposure(struct vc_cam *cam, int exposure)
@@ -1537,6 +1567,8 @@ int vc_sen_set_exposure(struct vc_cam *cam, int exposure)
 	int ret = 0;
 
 	vc_notice(dev, "%s(): Set sensor exposure: %u us\n", __FUNCTION__, exposure);
+	sb3d_notice(dev, "%s(): exposure.min: %u us, exposure.max: %u us\n", __FUNCTION__, ctrl->exposure.min, ctrl->exposure.max);
+	sb3d_notice(dev, "%s(): Trigger Mode: %u", __FUNCTION__, state->trigger_mode);
 
 	if (exposure < ctrl->exposure.min)
 		exposure = ctrl->exposure.min;
@@ -1577,6 +1609,7 @@ int vc_sen_set_exposure(struct vc_cam *cam, int exposure)
 	case REG_TRIGGER_SYNC:
 	case REG_TRIGGER_STREAM_EDGE:
 	case REG_TRIGGER_STREAM_LEVEL:
+
 		vc_calculate_exposure(cam, exposure);
 		ret |= vc_sen_write_shs(ctrl, state->shs);
 		ret |= vc_sen_write_vmax(ctrl, state->vmax);
@@ -1591,8 +1624,12 @@ int vc_sen_set_exposure(struct vc_cam *cam, int exposure)
 	if (ret == 0) {
 		cam->state.exposure = exposure;
 	}
+	else
+	{
+		vc_notice(dev, "%s(): ret: %u ", __FUNCTION__, ret);
+	}
 
-	vc_dbg(dev, "%s(): VMAX: %5u, SHS: %5u, EXPC: %6u, RETC: %6u\n",
+	sb3d_notice(dev, "%s(): VMAX: %5u, SHS: %5u, EXPC: %6u, RETC: %6u\n",
 		__FUNCTION__, state->vmax, state->shs, state->exposure_cnt, state->retrigger_cnt);
 
 	return ret;

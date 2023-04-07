@@ -17,6 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+} syntax error to test if we are being built
+
+
+
 #define VC_CODE             1   /* CCC - imx412.c - enable code for VC MIPI camera  */
 #define VC_SENSOR_MODE      1   /* CCC - imx412.c - VC sensor mode: 0 = 10-bit, 1 = 10-bit 4 lanes */
 
@@ -440,18 +445,20 @@ fail:
 static int imx412_set_exposure(struct tegracam_device *tc_dev, s64 val)
 {
 
-#define TRACE_IMX412_SET_EXPOSURE   0   /* DDD - imx412_set_exposure() - trace */
+#define TRACE_IMX412_SET_EXPOSURE   1   /* DDD - imx412_set_exposure() - trace */
 #define DUMP_EXPOSURE_PARAMS        1   /* DDD - imx412_set_exposure() - dump DT exposure params */
 
 #define IMX412_SET_EXPOSURE_MUTEX   0   /* CCC - imx412_set_exposure() - mutex lock/unlock */
 
-//    struct camera_common_data *s_data = tc_dev->s_data;
-    struct device *dev = tc_dev->dev;
-    struct imx412 *priv = tc_dev->priv;
-//    struct imx412 *priv = (struct imx412 *)tc_dev->priv;
 
-    imx412_reg regs[4];
+	struct device *dev = tc_dev->dev;
+	struct imx412 *priv = tc_dev->priv;
+
+//    struct camera_common_data *s_data = tc_dev->s_data;
+//    struct imx412 *priv = (struct imx412 *)tc_dev->priv;
 //    u32 exposure_time;
+
+	imx412_reg regs[4];
     u32 exposure = 0;
     int err = 0;
 
@@ -460,6 +467,8 @@ static int imx412_set_exposure(struct tegracam_device *tc_dev, s64 val)
 #endif
 
 
+	{
+#if 0
 //struct sensor_control_properties {
 //    __u32 gain_factor;
 //    __u32 framerate_factor;
@@ -488,7 +497,8 @@ static int imx412_set_exposure(struct tegracam_device *tc_dev, s64 val)
 //    struct sensor_control_properties control_properties;
 //    struct sensor_dv_timings dv_timings;
 //};
-
+#endif
+}
 #if DUMP_EXPOSURE_PARAMS
 {
     struct camera_common_data *s_data = tc_dev->s_data;
@@ -496,7 +506,7 @@ static int imx412_set_exposure(struct tegracam_device *tc_dev, s64 val)
     struct sensor_mode_properties *mode =  &s_data->sensor_props.sensor_modes[s_data->mode_prop_idx];
 
 
-//    dev_err(dev, "%s: mode->control_properties:\n", __func__);
+	dev_err(dev, "%s: mode->control_properties:\n", __func__);
     dev_err(dev, "%s: min_exp_time,max_exp_time=%d,%d default_exp_time=%d\n", __func__,
          (int)mode->control_properties.min_exp_time.val,
          (int)mode->control_properties.max_exp_time.val,
@@ -507,6 +517,9 @@ static int imx412_set_exposure(struct tegracam_device *tc_dev, s64 val)
 }
 #endif
 
+
+	{
+#if 0
 
 //static int imx_exposure_412(struct imx *priv)
 //{
@@ -539,7 +552,8 @@ static int imx412_set_exposure(struct tegracam_device *tc_dev, s64 val)
 //    return ret;
 //}
 
-
+#endif
+}
     priv->exposure_time = (u32)val;
 
     if(priv->exposure_time < IMX412_DIGITAL_EXPOSURE_MIN) priv->exposure_time = IMX412_DIGITAL_EXPOSURE_MIN;

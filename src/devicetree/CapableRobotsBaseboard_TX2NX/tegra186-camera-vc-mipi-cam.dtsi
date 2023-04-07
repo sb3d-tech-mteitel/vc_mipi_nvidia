@@ -240,7 +240,7 @@
 
 					// This node is needed by the Tegra framework.
 					// You don't have to change any settings if just want to use the V4L API.
-					mode0 {
+					mode0 { // cam0
 						num_lanes                = NUM_LANES;
 						tegra_sinterface         = CAM0_TEGRA_SINTERFACE;
 						embedded_metadata_height = VC_MIPI_METADATA_H;
@@ -267,15 +267,15 @@
 						inherent_gain            = "1";
 						gain_factor              = "1000";
 						min_gain_val             = "1";         // mdB
-						max_gain_val             = "45000";     // mdB
-						step_gain_val            = "14";        // mdB
-						default_gain             = "1";         // mdB
+						max_gain_val             = "30000";     // mdB
+						step_gain_val            = "10";        // mdB
+						default_gain             = "10";         // mdB
 
-						exposure_factor          = "1000";
+						exposure_factor          = "1000000";
 						min_exp_time             = "1";         // us
-						max_exp_time             = "529048";    // us  1/40 second
+						max_exp_time             = "25000000";    // us  1/40 second
 						step_exp_time            = "1";         // us
-						default_exp_time         = "10000";     // us
+						default_exp_time         = "2000000";    // us
 
 						framerate_factor         = "1000";
 						min_framerate            = "1000";         // mHz
@@ -321,7 +321,7 @@
 						step_gain_val            = "14";         // mdB
 						default_gain             = "1";         // mdB
 
-						exposure_factor          = "1000";
+						exposure_factor          = "1000000";
 						min_exp_time             = "1";         // us
 						max_exp_time             = "529048";   // us
 						step_exp_time            = "1";         // us
@@ -393,7 +393,7 @@
 
 
 
-					mode0 {
+					mode0 { //cam1
 						num_lanes                = NUM_LANES;
 						tegra_sinterface         = CAM1_TEGRA_SINTERFACE;
 						embedded_metadata_height = VC_MIPI_METADATA_H;
@@ -420,15 +420,15 @@
 						inherent_gain            = "1";
 						gain_factor              = "1000";
 						min_gain_val             = "1";         // mdB
-						max_gain_val             = "47000";     // mdB
-						step_gain_val            = "14";        // mdB
-						default_gain             = "1";         // mdB
+						max_gain_val             = "30000";     // mdB
+						step_gain_val            = "10";        // mdB
+						default_gain             = "10";         // mdB
 
-						exposure_factor          = "1000";
+						exposure_factor          = "1000000";
 						min_exp_time             = "1";         // us
-						max_exp_time             = "529048";    // us  1/40 second
+						max_exp_time             = "25000000";    // us  1/40 second
 						step_exp_time            = "1";         // us
-						default_exp_time         = "10000";     // us
+						default_exp_time         = "2000000";     // us
 
 						framerate_factor         = "1000";
 						min_framerate            = "1000";         // mHz
@@ -472,7 +472,7 @@
 						step_gain_val            = "14";       // mdB
 						default_gain             = "1";         // mdB
 
-						exposure_factor          = "1000";
+						exposure_factor          = "1000000";
 						min_exp_time             = "1";         // us
 						max_exp_time             = "529048";   // us
 						step_exp_time            = "1";         // us
