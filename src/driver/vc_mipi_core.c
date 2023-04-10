@@ -88,7 +88,7 @@ static __u8 i2c_read_reg(struct device *dev, struct i2c_client *client, const __
 
 	ret = i2c_transfer(client->adapter, msgs, ARRAY_SIZE(msgs));
 	if (ret < 0) {
-		vc_err(&client->dev, "%s(): Reading register 0x%04x from 0x%02x failed\n", func, addr, client->addr);
+		vc_err(&client->dev, "%s(): Reading register 0x%04x from 0x%02x failed\n", func, addr, client->addr);
 		return ret;
 	}
 
@@ -201,7 +201,7 @@ int vc_write_i2c_reg(struct i2c_client *client, const __u16 addr, const __u8 val
 static void vc_core_print_desc(struct device *dev, struct vc_desc *desc)
 {
 	int is_color = vc_mod_is_color_sensor(desc);
-	vc_notice (dev,"SB3D V0.02");
+	vc_notice (dev,"SB3D V0.03");
 	vc_notice(dev, "+--- VC MIPI Camera -----------------------------------+\n");
 	vc_notice(dev, "| MANUF. | %s               MID: 0x%04x |\n", desc->manuf, desc->manuf_id);
 	vc_notice(dev, "| MODULE | ID:  0x%04x                     REV:   %04u |\n", desc->mod_id, desc->mod_rev);
