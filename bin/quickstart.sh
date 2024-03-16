@@ -129,7 +129,7 @@ print_configure_camera_note() {
 configure_camera() {
         setup_nano
         print_configure_camera_note
-        nano -l +23 $DT_CAM_FILE
+        code $DT_CAM_FILE
 }
 
 print_note_before_start() {
@@ -172,7 +172,7 @@ done
 DIR=$PWD
 
 print_intro
-check_recovery_mode
+#check_recovery_mode
 configure
 configure_camera
 print_note_before_start

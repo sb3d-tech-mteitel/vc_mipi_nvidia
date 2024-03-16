@@ -121,7 +121,7 @@
 #else //Xavior
 	#define VI_BASE  vi@15c10000
 	#define NVCSI nvcsi@15a00000
-	#define I2C_MUX_RESET TEGRA194_MAIN_GPIO(L,3)
+	#define I2C_MUX_RESET TEGRA194_AON_GPIO(CC, 1)
 
 #endif
 
@@ -129,10 +129,10 @@
 / {
 #if LINUX_VERSION < 500
         host1x {
-    sb3d_version = "1.62";
+    sb3d_version = "4.00";
     vc_vi_base: VI_BASE {
 #else
-    sb3d_version = "1.63";
+    sb3d_version = "5.00";
        tegra-capture-vi  {
 #endif
                 num-channels = <VC_MIPI_CAMERAS>;
@@ -206,7 +206,7 @@
                                         #size-cells = <0>;
                                         vc_csi_chan1_port0: port@0 {
                                                 reg = <0>;
-                    vc_csi_in1: endpoint@0 {
+                                                vc_csi_in1: endpoint@2 {
                         port-index = <CAM1_PORT_INDEX>;
                                                         bus-width = <BUS_WIDTH>;
                                                         remote-endpoint = <&vc_mipi_out1>;
@@ -234,7 +234,7 @@
 
 i2c@3180000 {
     pca9547@70 {
-	reset-gpios = <&tegra_main_gpio I2C_MUX_RESET GPIO_ACTIVE_HIGH>;
+	reset-gpios = <&tegra_aon_gpio I2C_MUX_RESET GPIO_ACTIVE_HIGH>;
         compatible = I2C_MUX_CHIP; // unit 1 uses pca9548 all others use pca9587
         status = "okay";
         reg = <0x70>;
@@ -549,62 +549,4 @@ i2c@3180000 {
                 };
         };
 };
-#if 0
-
-#define CAM0_PWDN     TEGRA194_MAIN_GPIO(P, 4)
-#define CAM1_PWDN     TEGRA194_MAIN_GPIO(P, 5)
-#define CAM_I2C_MUX   TEGRA194_AON_GPIO(CC, 3)
-
-/ {
-        cam_i2cmux {
-                status = "okay";
-                compatible = "i2c-mux-gpio";
-                #address-cells = <1>;
-                #size-cells = <0>;
-                mux-gpios = <&tegra_aon_gpio CAM_I2C_MUX GPIO_ACTIVE_HIGH>;
-                i2c-parent = <&cam_i2c>;
-#if VC_MIPI_CAM_0 == 1
-                i2c@0 {
-                        status = "okay";
-                        reg = <0>;
-                        #address-cells = <1>;
-                        #size-cells = <0>;
-#if VC_MIPI_MANUFACTURER == 1
-                        vc_mipi@1a {
-#else
-                        vc_mipi@60 {
-#endif
-                                status = "okay";
-                                reset-gpios = <&tegra_main_gpio CAM0_PWDN GPIO_ACTIVE_HIGH>;
-                        };
-                };
-#endif
-#if VC_MIPI_CAM_1 == 1
-                i2c@1 {
-                        status = "okay";
-                        reg = <1>;
-                        #address-cells = <1>;
-                        #size-cells = <0>;
-#if VC_MIPI_MANUFACTURER == 1
-                        vc_mipi@1a {
-#else
-                        vc_mipi@60 {
-#endif
-                                status = "okay";
-                                reset-gpios = <&tegra_main_gpio CAM1_PWDN GPIO_ACTIVE_HIGH>;
-                        };
-                };
-#endif
-        };
-
-        gpio@2200000 {
-                camera-control-output-low {
-                        gpio-hog;
-                        output-low;
-                        gpios = <CAM0_PWDN 0 CAM1_PWDN 0>;
-                        label = "cam0-pwdn","cam1-pwdn";
-                };
-        };
-};
-#endif
 

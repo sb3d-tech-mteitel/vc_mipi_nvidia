@@ -1,0 +1,40 @@
+
+Subject: [PATCH 4/4] GPIO for i2c reset
+
+
+diff --git a/hardware/nvidia/platform/t19x/jakku/kernel-dts/common/tegra194-p3668-common.dtsi b/hardware/nvidia/platform/t19x/jakku/kernel-dts/common/tegra194-p3668-common.dtsi
+index e34f2f8..c430170 100644
+--- a/hardware/nvidia/platform/t19x/jakku/kernel-dts/common/tegra194-p3668-common.dtsi
++++ b/hardware/nvidia/platform/t19x/jakku/kernel-dts/common/tegra194-p3668-common.dtsi
+@@ -317,15 +317,6 @@
+ 			label = "w-disable2";
+ 			status = "okay";
+ 		};
+-		suspend_gpio: suspend-led-gpio {
+-			gpio-hog;
+-			output-high;
+-			gpio-suspend;
+-			suspend-output-low;
+-			gpios = <TEGRA194_AON_GPIO(CC, 1) GPIO_ACTIVE_HIGH>;
+-			label = "suspend-led-gpio";
+-			status = "okay";
+-		};
+ 	};
+ 
+ 	pcie@14160000 {
+@@ -476,15 +467,6 @@
+ 		};
+ 	};
+ 
+-	leds {
+-		compatible = "gpio-leds";
+-		status = "okay";
+-		pwr {
+-			gpios = <&tegra_aon_gpio TEGRA194_AON_GPIO(CC, 1) GPIO_ACTIVE_HIGH>;
+-			default-state = "on";
+-		};
+-	};
+-
+ 
+ 	/* QSPI flash S25FS128SAGNFI103 is controlled by qspi0 */
+ 	spi@3270000 {
