@@ -69,39 +69,6 @@
 //  this repository https://github.com/VC-MIPI-modules/vc_mipi_nvidia#gstreamer-support
 // ------------------------------------------------------------------------------------------------
 
-//#########################################################################
-//            _                 ___
-//           [U]               [USB]     ___               JNX42 LM
-//           [S]      ____     [===]    [ETH]    _         Rear view
-//__<usb>____[B]_____[HDMI]____[USB]____[''']___[o]__
-//===================================================      Revision 1
-//                    [*]        [*]     [*]               
-//                   Reset      F-Rec    Pwr               Buttons with
-//                                                         Force Recovery
-//#########################################################################
-//            _                 ___
-//           [U]               [USB]     ___               JNX42 LM
-//           [S]      ____     [===]    [ETH]    _         Rear view
-//__<usb>____[B]_____[HDMI]____[USB]____[''']___[o]__
-//===================================================      Revision >= 2
-//                    [*]      [...]     [*]               
-//                   Reset               Pwr               Buttons without
-//                                                         Force Recovery
-//#########################################################################
-
-// Cam0 and Cam1 Trigger pins are swapped in revision 1.0
-// Auvidea board revision 2 and upwards will be compatible with NVIDIA device tree.
-#define REVISION 1
-#if REVISION == 1
-        #define CAM0_PWDN       TEGRA234_MAIN_GPIO(AC, 0)
-        #define CAM1_PWDN       TEGRA234_MAIN_GPIO(H, 6)
-#else
-        #define CAM0_PWDN       TEGRA234_MAIN_GPIO(H, 6)
-        #define CAM1_PWDN       TEGRA234_MAIN_GPIO(AC, 0)
-#endif
-
- //      #define  CAM_I2C_MUX     TEGRA234_AON_GPIO(CC, 1)
-
 
 #if VC_MIPI_LANES == 1
     #define BUS_WIDTH 1
@@ -220,7 +187,7 @@
 i2c@3180000 {
          pca9547@70 {
 #if VC_MIPI_CAM_0 == 1
-                        i2c@0 {
+                        i2c@2 {
                                 vc_mipi_cam0: vc_mipi@1a {
                                         reg                     = <0x1a>;
                                         compatible              = "nvidia,vc_mipi";
@@ -235,8 +202,8 @@ i2c@3180000 {
                                         // ----------------------------------------------------
                                         // If you want to use GStreamer with nvarguscamerasrc
                                         // you have to adjust this settings
-                                        physical_w              = "0.000";
-                                        physical_h              = "0.000";
+                                        physical_w              = "4.000";
+                                        physical_h              = "3.000";
                                         // ----------------------------------------------------
 
                                         // This node is needed by the Tegra framework.
@@ -312,7 +279,7 @@ i2c@3180000 {
         #endif // VC_MIPI_CAM_0
 
         #if VC_MIPI_CAM_1 == 1
-                        i2c@1 {
+                        i2c@3 {
                                 vc_mipi_cam1: vc_mipi@1a {
                                         reg                     = <0x1a>;
                                         compatible              = "nvidia,vc_mipi";
@@ -404,15 +371,16 @@ i2c@3180000 {
                         };
         #endif // VC_MIPI_CAM_1
                 };
-
-                lens@vc_mipi {
-                        min_focus_distance  = "0.0";
-                        hyper_focal         = "0.0";
-                        focal_length        = "6.0";
-                        f_number            = "2.0";
-                        aperture            = "0.0";
-                };
         };
+#if 0
+        lens@vc_mipi {
+                min_focus_distance  = "0.0";
+                hyper_focal         = "0.0";
+                focal_length        = "6.0";
+                f_number            = "2.0";
+                aperture            = "0.0";
+        };
+#endif
 };
 
 / {
@@ -436,13 +404,15 @@ i2c@3180000 {
                                 orientation = "1";
                                 cam_module0_drivernode0: drivernode0 {
                                         pcl_id = "v4l2_sensor";
-                                        devname = "vc_mipi 9-001a";
-                                        proc-device-tree = "/proc/device-tree/cam_i2cmux/i2c@0/vc_mipi@1a";
+                                        devname = "vc_mipi 32-001a";
+                                        proc-device-tree = "/proc/device-tree/i2c@3180000/pca9547@70/i2c@2/vc_mipi@1a";
                                 };
+                                #if 0
                                 cam_module0_drivernode1: drivernode1 {
                                         pcl_id = "v4l2_lens";
                                         proc-device-tree = "/proc/device-tree/lens@vc_mipi/";
                                 };
+                                #endif
                         };
 #endif // VC_MIPI_CAM_0
 
@@ -452,14 +422,16 @@ i2c@3180000 {
                                 position = "rear";
                                 orientation = "1";
                                 cam_module1_drivernode0: drivernode0 {
-                                pcl_id = "v4l2_sensor";
-                                devname = "vc_mipi 10-001a";
-                                proc-device-tree = "/proc/device-tree/cam_i2cmux/i2c@1/vc_mipi@1a";
+                                        pcl_id = "v4l2_sensor";
+                                        devname = "vc_mipi 33-001a";
+                                        proc-device-tree = "/proc/device-tree/i2c@3180000/pca9547@70/i2c@3/vc_mipi@1a";
                                 };
+                                #if 0
                                 cam_module1_drivernode1: drivernode1 {
                                         pcl_id = "v4l2_lens";
                                         proc-device-tree = "/proc/device-tree/lens@vc_mipi/";
                                 };
+                                #endif
                         };
 #endif // VC_MIPI_CAM_1
                 };
@@ -481,38 +453,31 @@ i2c@3180000 {
                         #size-cells = <0>;
                         //vcc-supply = <&battery_reg>;
                         force_bus_start = <CAMERA_I2C_MUX_BUS(0)>;
-                        i2c-parent = <&cam_i2c>;
+
 #if VC_MIPI_CAM_0 == 1
-                                i2c@0 {
+                                i2c@2 {
                                         status = "okay";
-                                        reg = <0>;
+                                        reg = <2>;
+                                        i2c-mux,deselect-on-exit;
                                         #address-cells = <1>;
                                         #size-cells = <0>;
                                         vc_mipi@1a {
-                                                reset-gpios = <&tegra_main_gpio CAM0_PWDN GPIO_ACTIVE_HIGH>;
+ //                                               reset-gpios = <&tegra_main_gpio CAM0_PWDN GPIO_ACTIVE_HIGH>;
                                         };
                                 };
 #endif
 #if VC_MIPI_CAM_1 == 1
-                                i2c@1 {
+                                i2c@3 {
                                         status = "okay";
-                                        reg = <1>;
+                                        reg = <3>;
+                                        i2c-mux,deselect-on-exit;
                                         #address-cells = <1>;
                                         #size-cells = <0>;
                                         vc_mipi@1a {
-                                                reset-gpios = <&tegra_main_gpio CAM1_PWDN GPIO_ACTIVE_HIGH>;
+ //                                               reset-gpios = <&tegra_main_gpio CAM1_PWDN GPIO_ACTIVE_HIGH>;
                                         };
                                 };
 #endif
-                       
-		                gpio@2200000 {
-		                        camera-control-output-low {
-		                                gpio-hog;
-		                                output-low;
-		                                gpios = <CAM0_PWDN 0 CAM1_PWDN 0>;
-		                                label = "cam0-pwdn","cam1-pwdn";
-		                        };
-		                };
                 };
         };
 };
