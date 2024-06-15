@@ -142,10 +142,10 @@
 / {
 #if LINUX_VERSION < 500
         host1x {
-    sb3d_version = "1.62";
+    sb3d_version = "2.10";
     vc_vi_base: VI_BASE {
 #else
-    sb3d_version = "1.63";
+    sb3d_version = "xxx";
        tegra-capture-vi  {
 #endif
                 num-channels = <VC_MIPI_CAMERAS>;
@@ -227,7 +227,7 @@
                                         };
                                         vc_csi_chan1_port1: port@1 {
                                                 reg = <1>;
-                                                vc_csi_out1: endpoint@3 {
+                                                vc_csi_out1: endpoint@1 {
                                                         remote-endpoint = <&vc_vi_in1>;
                                                 };
                                         };
@@ -251,8 +251,8 @@ i2c@3180000 {
         compatible = I2C_MUX_CHIP; // unit 1 uses pca9548 all others use pca9587
         status = "okay";
         reg = <0x70>;
-#address-cells = <1>;
-#size-cells = <0>;
+	#address-cells = <1>;
+	#size-cells = <0>;
         vcc-supply = <&battery_reg>;
         force_bus_start = <CAMERA_I2C_MUX_BUS(0)>;
         i2c-parent = <&cam_i2c>;
@@ -262,16 +262,11 @@ i2c@3180000 {
             status = "okay";
             reg = <2>;
             i2c-mux,deselect-on-exit;
-#address-cells = <1>;
-#size-cells = <0>;
+            #address-cells = <1>;
+            #size-cells = <0>;
 
-#if VC_MIPI_MANUFACTURER == 1
-                        vc_mipi_cam0: vc_mipi@1a {
+                       vc_mipi_cam0: vc_mipi@1a {
                                 reg                     = <0x1a>;
-#else
-                        vc_mipi_cam0: vc_mipi@60 {
-                                reg                     = <0x60>;
-#endif
                                 compatible              = "nvidia,vc_mipi";
 
                                 devnode                 = "video0";
@@ -296,8 +291,9 @@ i2c@3180000 {
 
                 mode0 { //cam0
                                         num_lanes                = NUM_LANES;
-                    tegra_sinterface         = CAM0_TEGRA_SINTERFACE;
+                                        tegra_sinterface         = CAM0_TEGRA_SINTERFACE;
                                         embedded_metadata_height = VC_MIPI_METADATA_H;
+                                        discontinuous_clk        = "no";
                                         readout_orientation      = "0";
 
                                         // ----------------------------------------------------
@@ -305,51 +301,50 @@ i2c@3180000 {
                                         // you have to adjust this settings. 
                                         active_l                 = "0";
                                         active_t                 = "0";
-                                        active_w                 = "0";
-                                        active_h                 = "0";
+                                        active_w                 = "4032";
+                                        active_h                 = "3040";
 
 #if LINUX_VERSION < 500
                                         pixel_t                  = "bayer_rggb";
+                                        pix_clk_hz               = "800000000";
+
 #else
                                         mode_type                = "bayer";
                                         pixel_phase              = "rggb";
                                         csi_pixel_bit_depth      = "10";
-#endif
-                                        min_gain_val             = "0";         // mdB
-                                        max_gain_val             = "48000";     // mdB
-                                        step_gain_val            = "100";       // mdB
-                                        default_gain             = "0";         // mdB
 
+#endif
+
+                                        inherent_gain            = "1";
+                                        gain_factor              = "1000";
+                                        min_gain_val             = "1";         // mdB
+                                        max_gain_val             = "30000";     // mdB
+                                        step_gain_val            = "10";       // mdB
+                                        default_gain             = "10";         // mdB
+
+                                        exposure_factor          = "1000000";
                                         min_exp_time             = "1";         // us
-                                        max_exp_time             = "1000000";   // us
+                                        max_exp_time             = "25000000";    // us  1/40 second
                                         step_exp_time            = "1";         // us
-                                        default_exp_time         = "10000";     // us
+                                        default_exp_time         = "2000000";    // us
 
                                         // For applications like argus_camera, there should 
                                         // be a minimal frame rate greater than zero!
+                                        framerate_factor         = "1000";
                                         min_framerate            = "1000";      // mHz
-                                        max_framerate            = "60000";     // mHz
+                                        max_framerate            = "40057";     // mHz
                                         step_framerate           = "100";       // mHz
-                                        default_framerate        = "60000";     // mHz
+                                        default_framerate        = "40057";     // mHz
                                         // ----------------------------------------------------
 
-                                        gain_factor              = "1000";
-                                        exposure_factor          = "1000000";
-                                        framerate_factor         = "1000";
-                                        inherent_gain            = "1";
                                         min_hdr_ratio            = "1";
                                         max_hdr_ratio            = "1";
 
-                                        line_length              = "0";
+                                        line_length              = "4184";
                                         phy_mode                 = "DPHY";
-                                        discontinuous_clk        = "no";
                                         mclk_khz                 = "24000";
 
-#if LINUX_VERSION < 500
-                                        pix_clk_hz               = "800000000";
-#else
-                                        pix_clk_hz               = "74250000";
-#endif
+
                                         mclk_multiplier          = "9.33";
                                         cil_settletime           = "0";
                                         dpcm_enable              = "false";
@@ -405,9 +400,10 @@ i2c@3180000 {
                                 // This node is needed by the Tegra framework.
                                 // You don't have to change any settings if just want to use the V4L API.
                                 mode0 {
-                                        num_lanes                = NUM_LANES;
-                                        tegra_sinterface         = "serial_c";
+                                                                        num_lanes                = NUM_LANES;
+                                        tegra_sinterface         = CAM1_TEGRA_SINTERFACE;
                                         embedded_metadata_height = VC_MIPI_METADATA_H;
+                                        discontinuous_clk        = "no";
                                         readout_orientation      = "0";
 
                                         // ----------------------------------------------------
@@ -415,51 +411,49 @@ i2c@3180000 {
                                         // you have to adjust this settings. 
                                         active_l                 = "0";
                                         active_t                 = "0";
-                                        active_w                 = "0";
-                                        active_h                 = "0";
+                                        active_w                 = "4032";
+                                        active_h                 = "3040";
 
 #if LINUX_VERSION < 500
                                         pixel_t                  = "bayer_rggb";
+                                        pix_clk_hz               = "800000000";
 #else
                                         mode_type                = "bayer";
                                         pixel_phase              = "rggb";
                                         csi_pixel_bit_depth      = "10";
+                                        pix_clk_hz               = "74250000";
 #endif
-                                        min_gain_val             = "0";         // mdB
-                                        max_gain_val             = "48000";     // mdB
-                                        step_gain_val            = "100";       // mdB
-                                        default_gain             = "0";         // mdB
 
+                                        inherent_gain            = "1";
+                                       gain_factor              = "1000";
+                                        min_gain_val             = "1";         // mdB
+                                        max_gain_val             = "30000";     // mdB
+                                        step_gain_val            = "10";       // mdB
+                                        default_gain             = "10";         // mdB
+
+                                        exposure_factor          = "1000000";
                                         min_exp_time             = "1";         // us
-                                        max_exp_time             = "1000000";   // us
+                                        max_exp_time             = "25000000";    // us  1/40 second
                                         step_exp_time            = "1";         // us
-                                        default_exp_time         = "10000";     // us
+                                        default_exp_time         = "2000000";    // us
 
                                         // For applications like argus_camera, there should 
                                         // be a minimal frame rate greater than zero!
+                                        framerate_factor         = "1000";
                                         min_framerate            = "1000";      // mHz
-                                        max_framerate            = "60000";     // mHz
+                                        max_framerate            = "40057";     // mHz
                                         step_framerate           = "100";       // mHz
-                                        default_framerate        = "60000";     // mHz
+                                        default_framerate        = "40057";     // mHz
                                         // ----------------------------------------------------
 
-                                        gain_factor              = "1000";
-                                        exposure_factor          = "1000000";
-                                        framerate_factor         = "1000";
-                                        inherent_gain            = "1";
                                         min_hdr_ratio            = "1";
                                         max_hdr_ratio            = "1";
 
-                                        line_length              = "0";
+                                        line_length              = "4184";
                                         phy_mode                 = "DPHY";
-                                        discontinuous_clk        = "no";
                                         mclk_khz                 = "24000";
 
-#if LINUX_VERSION < 500
-                                        pix_clk_hz               = "800000000";
-#else
-                                        pix_clk_hz               = "74250000";
-#endif
+
                                         mclk_multiplier          = "9.33";
                                         cil_settletime           = "0";
                                         dpcm_enable              = "false";
