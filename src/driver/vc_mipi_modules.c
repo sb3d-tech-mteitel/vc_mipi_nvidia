@@ -450,7 +450,7 @@ static void vc_init_ctrl_imx412(struct vc_ctrl *ctrl, struct vc_desc* desc)
 {
         INIT_MESSAGE("IMX412")
         
-        ctrl->gain                      = (vc_control) { .min =   0, .max =      1023, .def =      0 };
+        ctrl->gain                      = (vc_control) { .min =   0, .max =      900, .def =      0 };
 
         ctrl->csr.sen.blacklevel        = (vc_csr2) { .l = 0x0009, .m = 0x0008 };
         ctrl->csr.sen.vmax              = (vc_csr4) { .l = 0x0341, .m = 0x0340, .h = 0x0000, .u = 0x0000 };

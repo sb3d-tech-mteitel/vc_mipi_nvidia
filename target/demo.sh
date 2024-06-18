@@ -74,30 +74,36 @@ value() {
         echo $(tr -d '\0' < $1)
 }
 
+bin_value() {
+        echo $(od --endian big -t d4 < $1)
+}
+
 check_dt_settings()
 {
-        # cam_path=/sys/firmware/devicetree/base/cam_i2cmux/i2c@0
-        # echo "--- CAM1 ------------------------------------------------------"
-        # echo "${cam_path}"
-        # echo "physical_w:               $(value ${cam_path}/vc_mipi@1a/physical_w)"
-        # echo "physical_h:               $(value ${cam_path}/vc_mipi@1a/physical_h)"
-        # echo
-        # echo "num_lanes:                $(value ${cam_path}/vc_mipi@1a/num_lanes)"
-        # echo "embedded_metadata_height: $(value ${cam_path}/vc_mipi@1a/mode0/embedded_metadata_height)"
-        # echo "lane_polarity:            $(value ${cam_path}/vc_mipi@1a/mode0/lane_polarity)"
-        # echo "active_l:                 $(value ${cam_path}/vc_mipi@1a/mode0/active_l)"
-        # echo "active_t:                 $(value ${cam_path}/vc_mipi@1a/mode0/active_t)"
-        # echo "active_w:                 $(value ${cam_path}/vc_mipi@1a/mode0/active_w)"
-        # echo "active_h:                 $(value ${cam_path}/vc_mipi@1a/mode0/active_h)"
-        # echo
-        # echo "line_length:              $(value ${cam_path}/vc_mipi@1a/mode0/line_length)"
-        # echo "discontinuous_clk:        $(value ${cam_path}/vc_mipi@1a/mode0/discontinuous_clk)"
-        # echo "mclk_khz:                 $(value ${cam_path}/vc_mipi@1a/mode0/mclk_khz)"
-        # echo "pix_clk_hz:               $(value ${cam_path}/vc_mipi@1a/mode0/pix_clk_hz)"
-        # echo "mclk_multiplier:          $(value ${cam_path}/vc_mipi@1a/mode0/mclk_multiplier)"
-        # echo "cil_settletime:           $(value ${cam_path}/vc_mipi@1a/mode0/cil_settletime)"
-        # echo
-        cam_path=/sys/firmware/devicetree/base/cam_i2cmux/i2c@1
+        cam_path=/sys/firmware/devicetree/base/i2c@3180000/pca9547@70/i2c@2
+         echo "--- CAM1 ------------------------------------------------------"
+         echo "${cam_path}"
+         echo "physical_w:               $(value ${cam_path}/vc_mipi@1a/physical_w)"
+         echo "physical_h:               $(value ${cam_path}/vc_mipi@1a/physical_h)"
+         echo
+         echo "num_lanes:                $(value ${cam_path}/vc_mipi@1a/num_lanes)"
+         echo "embedded_metadata_height: $(value ${cam_path}/vc_mipi@1a/mode0/embedded_metadata_height)"
+         echo "lane_polarity:            $(value ${cam_path}/vc_mipi@1a/mode0/lane_polarity)"
+         echo "active_l:                 $(value ${cam_path}/vc_mipi@1a/mode0/active_l)"
+         echo "active_t:                 $(value ${cam_path}/vc_mipi@1a/mode0/active_t)"
+         echo "active_w:                 $(value ${cam_path}/vc_mipi@1a/mode0/active_w)"
+         echo "active_h:                 $(value ${cam_path}/vc_mipi@1a/mode0/active_h)"
+
+         
+         echo
+         echo "line_length:              $(value ${cam_path}/vc_mipi@1a/mode0/line_length)"
+         echo "discontinuous_clk:        $(value ${cam_path}/vc_mipi@1a/mode0/discontinuous_clk)"
+         echo "mclk_khz:                 $(value ${cam_path}/vc_mipi@1a/mode0/mclk_khz)"
+         echo "pix_clk_hz:               $(value ${cam_path}/vc_mipi@1a/mode0/pix_clk_hz)"
+         echo "mclk_multiplier:          $(value ${cam_path}/vc_mipi@1a/mode0/mclk_multiplier)"
+         echo "cil_settletime:           $(value ${cam_path}/vc_mipi@1a/mode0/cil_settletime)"
+         echo
+        cam_path=/sys/firmware/devicetree/base/i2c@3180000/pca9547@70/i2c@3
         echo "--- CAM0 ------------------------------------------------------"
         echo "${cam_path}"
         echo "physical_w:               $(value ${cam_path}/vc_mipi@1a/physical_w)"
@@ -117,13 +123,14 @@ check_dt_settings()
         echo "pix_clk_hz:               $(value ${cam_path}/vc_mipi@1a/mode0/pix_clk_hz)"
         echo "mclk_multiplier:          $(value ${cam_path}/vc_mipi@1a/mode0/mclk_multiplier)"
         echo "cil_settletime:           $(value ${cam_path}/vc_mipi@1a/mode0/cil_settletime)"
-        # echo
-        # tegra_path=/sys/firmware/devicetree/base/tegra-camera-platform
-        # echo "---------------------------------------------------------------"
-        # echo "num_csi_lanes:            $(value ${tegra_path}/num_csi_lanes)"/
-        # echo "max_lane_speed:           $(value ${tegra_path}/max_lane_speed)"
-        # echo "min_bits_per_pixel:       $(value ${tegra_path}/min_bits_per_pixel)"
-        # echo "max_pixel_rate:           $(value ${tegra_path}/max_pixel_rate)"
+       
+         echo
+         tegra_path=/sys/firmware/devicetree/base/tegra-camera-platform
+         echo "---------------------------------------------------------------"
+         echo "num_csi_lanes:            $(bin_value ${tegra_path}/num_csi_lanes)"/
+         echo "max_lane_speed:           $(bin_value ${tegra_path}/max_lane_speed)"
+         echo "min_bits_per_pixel:       $(bin_value ${tegra_path}/min_bits_per_pixel)"
+         echo "max_pixel_rate:           $(bin_value ${tegra_path}/max_pixel_rate)"
         echo "---------------------------------------------------------------"
 }
 

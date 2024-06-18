@@ -212,6 +212,7 @@ static void vc_core_print_desc(struct device *dev, struct vc_desc *desc)
         int is_color = vc_mod_is_color_sensor(desc);
 
         vc_notice(dev, "+--- VC MIPI Camera -----------------------------------+\n");
+        vc_notice(dev, "+--- SB3D V1.00---- -----------------------------------+\n");
         vc_notice(dev, "| MANUF. | %s               MID: 0x%04x |\n", desc->manuf, desc->manuf_id);
         vc_notice(dev, "| MODULE | ID:  0x%04x                     REV:   %04u |\n", desc->mod_id, desc->mod_rev);
         vc_notice(dev, "| SENSOR | %s%s %s%s                                |\n", desc->sen_manuf, (0 == strcmp("OM", desc->sen_manuf)) ? "  ":"", desc->sen_type, is_color ? "" : " ");
