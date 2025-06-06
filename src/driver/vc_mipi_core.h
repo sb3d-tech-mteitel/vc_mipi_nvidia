@@ -6,7 +6,6 @@
 #include <linux/types.h>
 #include <linux/i2c.h>
 #include <linux/videodev2.h>
-#include <media/tegra-v4l2-camera.h>
 
 #define vc_dbg(dev, fmt, ...) dev_dbg(dev, fmt, ##__VA_ARGS__)
 #define vc_info(dev, fmt, ...) dev_info(dev, fmt, ##__VA_ARGS__)
@@ -14,29 +13,31 @@
 #define vc_warn(dev, fmt, ...) dev_warn(dev, fmt, ##__VA_ARGS__)
 #define vc_err(dev, fmt, ...) dev_err(dev, fmt, ##__VA_ARGS__)
 
-#define FLAG_RESET_ALWAYS               (1 <<  0)
-#define FLAG_EXPOSURE_SONY              (1 <<  1)
-#define FLAG_EXPOSURE_NORMAL            (1 <<  2)
-#define FLAG_EXPOSURE_OMNIVISION        (1 <<  3)
+#define FLAG_EXPOSURE_SONY              (1 <<  0)
+#define FLAG_EXPOSURE_NORMAL            (1 <<  1)
+#define FLAG_EXPOSURE_OMNIVISION        (1 <<  2)
 
-#define FLAG_IO_ENABLED                 (1 <<  4)
-#define FLAG_FORMAT_GBRG                (1 <<  5)
-#define FLAG_DOUBLE_HEIGHT              (1 <<  6)
-#define FLAG_INCREASE_FRAME_RATE        (1 <<  7)
+#define FLAG_IO_ENABLED                 (1 <<  3)
+#define FLAG_FORMAT_GBRG                (1 <<  4)
+#define FLAG_DOUBLE_HEIGHT              (1 <<  5)
+#define FLAG_INCREASE_FRAME_RATE        (1 <<  6)
 
-#define FLAG_TRIGGER_DISABLE            (1 <<  8)
-#define FLAG_TRIGGER_EXTERNAL           (1 <<  9)
-#define FLAG_TRIGGER_PULSEWIDTH         (1 << 10)
-#define FLAG_TRIGGER_SELF               (1 << 11)
-#define FLAG_TRIGGER_SELF_V2            (1 << 12)
-#define FLAG_TRIGGER_SINGLE             (1 << 13)
-#define FLAG_TRIGGER_SYNC               (1 << 14)
-#define FLAG_TRIGGER_STREAM_EDGE        (1 << 15)
-#define FLAG_TRIGGER_STREAM_LEVEL       (1 << 16)
-#define FLAG_TRIGGER_SLAVE              (1 << 17)
+#define FLAG_TRIGGER_DISABLE            (1 <<  7)
+#define FLAG_TRIGGER_EXTERNAL           (1 <<  8)
+#define FLAG_TRIGGER_PULSEWIDTH         (1 <<  9)
+#define FLAG_TRIGGER_SELF               (1 << 10)
+#define FLAG_TRIGGER_SELF_V2            (1 << 11)
+#define FLAG_TRIGGER_SINGLE             (1 << 12)
+#define FLAG_TRIGGER_SYNC               (1 << 13)
+#define FLAG_TRIGGER_STREAM_EDGE        (1 << 14)
+#define FLAG_TRIGGER_STREAM_LEVEL       (1 << 15)
+#define FLAG_TRIGGER_SLAVE              (1 << 16)
 
-#define FLAG_PREGIUS_S                  (1 << 18)
-#define FLAG_USE_BINNING_INDEX          (1 << 19)
+#define FLAG_PREGIUS_S                  (1 << 17)
+#define FLAG_USE_BINNING_INDEX          (1 << 18)
+
+#define FLAG_RESET_STREAMMODE_ALWAYS    (1 << 19)
+#define FLAG_RESET_TRIGMODE_ALWAYS      (1 << 20)
 
 #define FORMAT_RAW08                    0x2a
 #define FORMAT_RAW10                    0x2b
@@ -45,6 +46,8 @@
 
 #define MAX_VC_MODES                    16
 #define MAX_BINNING_MODE_REGS           16
+
+#define MAX_I2C_RETRY_COUNT             5
 
 struct vc_desc_mode {
         __u8 data_rate[4];
@@ -197,7 +200,7 @@ struct vc_ctrl {
         __u8 max_binning_modes_used;
         
         // Array for binning_mode property read from device tree
-        dt_binning_mode dt_binning_modes[MAX_NUM_SENSOR_MODES];
+        struct dt_binning_mode *dt_binning_modes;
 
         // Control and status registers
         struct vc_csr csr;
@@ -251,7 +254,7 @@ struct device *vc_core_get_mod_device(struct vc_cam *cam);
 int vc_core_try_format(struct vc_cam *cam, __u32 code);
 int vc_core_set_format(struct vc_cam *cam, __u32 code);
 __u32 vc_core_get_format(struct vc_cam *cam);
-int vc_core_set_frame(struct vc_cam *cam, __u32 left, __u32 top, __u32 width, __u32 height);
+
 struct vc_frame *vc_core_get_frame(struct vc_cam *cam);
 int vc_core_set_num_lanes(struct vc_cam *cam, __u32 number);
 __u32 vc_core_get_num_lanes(struct vc_cam *cam);

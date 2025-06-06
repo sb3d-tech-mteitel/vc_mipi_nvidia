@@ -64,6 +64,13 @@ __u32 vc_core_calculate_max_frame_rate(struct vc_cam *cam, __u8 num_lanes, __u8 
 static __u32 vc_core_calculate_period_1H(struct vc_cam *cam, __u8 num_lanes, __u8 format, __u8 binning);
 void vc_core_calculate_roi(struct vc_cam *cam, __u32 *w_left, __u32 *w_right, __u32 *w_width,
         __u32 *w_top, __u32 *w_bottom, __u32 *w_height, __u32 *o_width, __u32 *o_height);
+struct vc_binning *vc_core_get_binning(struct vc_cam *cam);
+
+int i2c_write_regs(struct i2c_client *client, const struct vc_reg *regs, const char* func);
+__u32 vc_core_get_optimized_vmax(struct vc_cam *cam);
+vc_mode vc_core_get_mode(struct vc_cam *cam, __u8 num_lanes, __u8 format, __u8 binning);
+int vc_mod_set_power(struct vc_cam *cam, int on);
+int vc_sen_write_mode(struct vc_ctrl *ctrl, int mode);
 
 static int vc_sen_read_image_size(struct vc_ctrl *ctrl, struct vc_frame *size);
 #ifdef READ_VMAX
@@ -114,7 +121,8 @@ static int i2c_write_reg(struct device *dev, struct i2c_client *client, const __
         struct i2c_adapter *adap = client->adapter;
         struct i2c_msg msg;
         __u8 tx[3];
-        int ret;
+        int wRet = 0;
+        int i = 0;
 
         vc_dbg(dev, "%s():   addr: 0x%04x <= value: 0x%02x\n", func, addr, value);
 
@@ -125,9 +133,16 @@ static int i2c_write_reg(struct device *dev, struct i2c_client *client, const __
         tx[0] = addr >> 8;
         tx[1] = addr & 0xff;
         tx[2] = value;
-        ret = i2c_transfer(adap, &msg, 1);
 
-        return ret == 1 ? 0 : -EIO;
+        for (i = 0; i < MAX_I2C_RETRY_COUNT; i++) {
+                wRet = i2c_transfer(adap, &msg, 1);
+                if (1 == wRet) {
+                        return 0;
+                } else {
+                        vc_err(dev, "%s():  try (%d) addr: 0x%04x <= value: 0x%02x, (write) i2c_transfer ret=%d \n", func, i+1, addr, value, wRet);
+                }
+        }
+        return -EIO;
 }
 
 int i2c_write_regs(struct i2c_client *client, const struct vc_reg *regs, const char* func)
@@ -468,63 +483,6 @@ __u32 vc_core_get_format(struct vc_cam *cam)
 }
 EXPORT_SYMBOL(vc_core_get_format);
 
-void vc_core_limit_frame_position(struct vc_cam *cam, __u32 left, __u32 top)
-{
-        struct vc_ctrl *ctrl = &cam->ctrl;
-        struct vc_state *state = &cam->state;
-
-        if (left > ctrl->frame.width - state->frame.width) {
-                state->frame.left = ctrl->frame.width - state->frame.width;
-        } else {
-                state->frame.left = left;
-        }
-
-        if (top > ctrl->frame.height - state->frame.height) {
-                state->frame.top = ctrl->frame.height - state->frame.height;
-        } else {
-                state->frame.top = top;
-        }
-}
-EXPORT_SYMBOL(vc_core_limit_frame_position);
-
-void vc_core_limit_frame_size(struct vc_cam *cam, __u32 width, __u32 height)
-{
-        struct vc_ctrl *ctrl = &cam->ctrl;
-        struct vc_state *state = &cam->state;
-
-        if (width > ctrl->frame.width) {
-                state->frame.width = ctrl->frame.width;
-        } else {
-                state->frame.width = width;
-        }
-
-        if (height > ctrl->frame.height) {
-                state->frame.height = ctrl->frame.height;
-        } else {
-                state->frame.height = height;
-        }
-}
-EXPORT_SYMBOL(vc_core_limit_frame_size);
-
-int vc_core_set_frame(struct vc_cam *cam, __u32 left, __u32 top, __u32 width, __u32 height)
-{
-        struct vc_state *state = &cam->state;
-        struct device *dev = vc_core_get_sen_device(cam);
-
-        vc_notice(dev, "%s(): Set frame (left: %u, top: %u, width: %u, height: %u)\n", __FUNCTION__, left, top, width, height);
-
-        vc_core_limit_frame_size(cam, width, height);
-        vc_core_limit_frame_position(cam, left, top);
-
-        if (state->frame.left != left || state->frame.top != top || state->frame.width != width || state->frame.height != height) {
-                vc_warn(dev, "%s(): Adjusted frame (left: %u, top: %u, width: %u, height: %u)\n", __FUNCTION__,
-                state->frame.left, state->frame.top, state->frame.width, state->frame.height);
-        }
-
-        return 0;
-}
-EXPORT_SYMBOL(vc_core_set_frame);
-
 struct vc_frame *vc_core_get_frame(struct vc_cam *cam)
 {
         struct vc_frame* frame = &cam->state.frame;
@@ -642,27 +600,31 @@ __u32 vc_core_get_optimized_vmax(struct vc_cam *cam)
         struct vc_ctrl *ctrl = &cam->ctrl;
         struct vc_state *state = &cam->state;
         struct device *dev = &ctrl->client_sen->dev;
+        struct vc_binning *binning = vc_core_get_binning(cam);
 
-        __u8 binning = state->binning_mode;
+        __u8 binning_mode = state->binning_mode;
         __u8 num_lanes = state->num_lanes;
         __u8 format = vc_core_v4l2_code_to_format(state->format_code);
-        __u32 vmax_def = vc_core_get_vmax(cam, num_lanes, format, binning).def;
+        __u32 vmax_def = vc_core_get_vmax(cam, num_lanes, format, binning_mode).def;
         __u32 vmax_res = vmax_def;
+        __u32 state_height = state->frame.height;
+        __u32 ctrl_height = ctrl->frame.height;
 
         if ( 0 == vmax_def) {
                 return vmax_def;
         }
 
-        if (0 == state->binning_mode)
-        {
-                // Increase the frame rate when image height is reduced.
-                if (ctrl->flags & FLAG_INCREASE_FRAME_RATE && state->frame.height < ctrl->frame.height) {
-                        vmax_res = vmax_def - (ctrl->frame.height - state->frame.height);
-                        vc_dbg(dev, "%s(): Increased frame rate: vmax %u/%u, height: %u/%u, vmax result: %u \n", __FUNCTION__,
-                                state->vmax, vmax_def, state->frame.height, ctrl->frame.height, vmax_res);
+        if (binning->v_factor > 0) {
+                ctrl_height = ctrl_height / binning->v_factor;
+        }
+
+        // Increase the frame rate when image height is reduced.
+        if (ctrl->flags & FLAG_INCREASE_FRAME_RATE && (state_height < ctrl_height)) {
+                vmax_res = vmax_def - (ctrl_height - state_height);
+                vc_dbg(dev, "%s(): Increased frame rate: vmax %u/%u, height: %u/%u, vmax result: %u \n", __FUNCTION__,
+                        state->vmax, vmax_def, state->frame.height, ctrl->frame.height, vmax_res);
 
                         return vmax_res;
-                }
         }
 
         return vmax_def;
@@ -1168,7 +1130,8 @@ int vc_mod_set_mode(struct vc_cam *cam, int *reset)
         }
 
         mode = vc_mod_find_mode(cam, num_lanes, format, type, binning);
-        if ( (mode == state->mode) && (!(ctrl->flags & FLAG_RESET_ALWAYS) && (type == MODE_TYPE_STREAM) && !bMustBinningReset)) {
+        if ( ((mode == state->mode) && (!bMustBinningReset) && ((MODE_TYPE_STREAM == type) && !(ctrl->flags & FLAG_RESET_STREAMMODE_ALWAYS)))
+          || ((mode == state->mode) && (!bMustBinningReset) && ((MODE_TYPE_TRIGGER == type) && !(ctrl->flags & FLAG_RESET_TRIGMODE_ALWAYS))) ) {
                 vc_dbg(dev, "%s(): Module mode %u need not to be set!\n", __FUNCTION__, mode);
                 *reset = 0;
                 return 0;

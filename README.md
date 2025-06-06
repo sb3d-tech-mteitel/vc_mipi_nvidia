@@ -2,7 +2,7 @@
 
 ![VC MIPI camera](doc/images/mipi_sensor_front_back.png)
 
-## Version 0.18.1 ([History](VERSION.md))
+## Version 0.18.3 ([History](VERSION.md))
 
 * Supported system on modules
   * [NVIDIA Jetson Nano 4GB/2GB (production + devkit)](https://developer.nvidia.com/embedded/jetson-nano)
@@ -24,12 +24,13 @@
   * [NVIDIA L4T 32.7.1](https://developer.nvidia.com/embedded/linux-tegra-r3271)
   * [NVIDIA L4T 32.7.2](https://developer.nvidia.com/embedded/linux-tegra-r3272)
   * [NVIDIA L4T 32.7.3](https://developer.nvidia.com/embedded/linux-tegra-r3273)
-  * [NVIDIA L4T 32.7.4](https://developer.nvidia.com/embedded/linux-tegra-r3274) *(only NVIDIA Jetson Nano, experimental)*
+  * [NVIDIA L4T 32.7.4](https://developer.nvidia.com/embedded/linux-tegra-r3274) *(only NVIDIA Jetson Nano)*
   * [NVIDIA L4T 35.1.0](https://developer.nvidia.com/embedded/jetson-linux-r351) *(only NVIDIA Jetson Xavier NX and AGX Xavier)*
-  * [NVIDIA L4T 35.2.1](https://developer.nvidia.com/embedded/jetson-linux-r3521) *(only NVIDIA Jetson Xavier NX, AGX Xavier and Orin NX, experimental)*
-  * [NVIDIA L4T 35.3.1](https://developer.nvidia.com/embedded/jetson-linux-r3531) *(only NVIDIA Jetson Xavier NX, AGX Xavier, Orin NX and Orin Nano, experimental)*
-  * [NVIDIA L4T 35.4.1](https://developer.nvidia.com/embedded/jetson-linux-r3541) *(only NVIDIA Jetson Xavier NX, AGX Xavier, Orin NX and Orin Nano, experimental)*
-  * [NVIDIA L4T 36.2.0](https://developer.nvidia.com/embedded/jetson-linux-r362) *(only NVIDIA Jetson Orin Nano and Orin NX + Orin Nano DevKit, experimental)*
+  * [NVIDIA L4T 35.2.1](https://developer.nvidia.com/embedded/jetson-linux-r3521) *(only NVIDIA Jetson Xavier NX, AGX Xavier and Orin NX)*
+  * [NVIDIA L4T 35.3.1](https://developer.nvidia.com/embedded/jetson-linux-r3531) *(only NVIDIA Jetson Xavier NX, AGX Xavier, Orin NX and Orin Nano)*
+  * [NVIDIA L4T 35.4.1](https://developer.nvidia.com/embedded/jetson-linux-r3541) *(only NVIDIA Jetson Xavier NX, AGX Xavier, Orin NX and Orin Nano)*
+  * [NVIDIA L4T 36.2.0](https://developer.nvidia.com/embedded/jetson-linux-r362) *(only NVIDIA Jetson Orin Nano and Orin NX)*
+  * [NVIDIA L4T 36.4.0](https://developer.nvidia.com/embedded/jetson-linux-r3640) *(only NVIDIA Jetson Orin Nano and Orin NX)*
 * Supported [VC MIPI Camera Modules](https://www.vision-components.com/fileadmin/external/documentation/hardware/VC_MIPI_Camera_Module/index.html) 
   * IMX178, IMX183, IMX226
   * IMX250, IMX252, IMX264, IMX265, IMX273, IMX392
@@ -50,7 +51,7 @@
   * **[Trigger mode](doc/TRIGGER_MODE.md)** '0: disabled', '1: external', '2: pulsewidth', '3: self', '4: single', '5: sync', '6: stream_edge', '7: stream_level' can be set via device tree or V4L2 control 'trigger_mode'
     * **Software trigger** can be executed by V4L2 control 'single_trigger'
   * **[IO mode](doc/IO_MODE.md)** '0: disabled', '1: flash active high', '2: flash active low', '3: trigger active low', '4: trigger active low and flash active high', '5: trigger and flash active low' can be set via device tree or V4L2 control 'flash_mode'
-  * **Frame rate** can be set via V4L2 control 'frame_rate' *(except OV9281)*
+  * **[Frame rate](doc/FRAME_RATE.md)** can be set via V4L2 control 'frame_rate' *(except OV9281)*
   * **[Black level](doc/BLACK_LEVEL.md)** can be set via V4L2 control 'black_level' *(except OV7251 and OV9281)*
   * **[ROI cropping](doc/ROI_CROPPING.md)** can be set via device tree properties active_l, active_t, active_w and active_h or v4l2-ctl.
   * **[Binning mode](doc/BINNING_MODE.md)** can be set via V4L2 control 'binning_mode' *(IMX412, IMX565, IMX566, IMX567, IMX568 only)*
@@ -121,6 +122,22 @@
    ```
 
 ## Changing camera settings in the device tree
+
+### Embedded Metadata Height
+
+Some of the streaming tools need an adjustment of the Embedded Metadata Height to work properly. </br>
+While v4l2-ctl won't work with a wrong metadata size, other streaming apps might be streaming, but will have a lack of timestamp information.<br>
+
+In the device tree include file of the configured board/som combination there is a parameter called **VC_MIPI_METADATA_H**. </br>
+This #define must be set according to your attached sensor. If you have a board with different sensors connected, it might be, that they need different values for the metadata height. In that case, you should alter the values in the parameter **embedded_metadata_height** directly in the modeX node of the attached sensor.</br>
+The Embedded Metadata Height parameter is available for nearly all soms with exception of the Jetson Nano.
+
+You can check your configured Embedded Metadata Height parameter on the running system with e.g.:
+<pre>
+cat /proc/device-tree/<b>cam_i2cmux</b>/i2c@<b>0</b>/vc_mipi@<b>1a</b>/mode0/embedded_metadata_height
+</pre>
+The bold parts of the path might vary, depending on your configured board/som/sensor combination.<br> 
+You can find this path in your configured dtsi file in the drivernode0 section of the moduleX node either in the variable *proc-device-tree* (Jetpack 4/5) or in the variable *sysfs-device-tree* (Jetpack 6)
 
 ### GStreamer Support
 
@@ -344,15 +361,28 @@ If you want to change some settings of a camera in the device tree, please follo
 
 ## Using long exposure times or external trigger mode with long waiting times (> 5 seconds)
 
-If you want to use your camera in an application with long exposure times or external trigger and the time between two consecutively triggers is potentially long (> 5 seconds) it is necessary to adjust the timeout of the csi receiver. In this case please change following line of code.
+If you want to use your camera in an application with long exposure times or external trigger and the time between two consecutively triggers is potentially long (> 5 seconds) it is necessary to adjust the timeout of the csi receiver. <br>
 
-   | system on module         | line | in file                                                          |
-   | ------------------------ | ---- | ---------------------------------------------------------------- |
-   | NVIDIA Jetson Nano       |  232 | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi2_fops.c |
-   | NVIDIA Jetson Xavier NX  |   36 | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi5_fops.c |
-   | NVIDIA Jetson AGX Xavier |   36 | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi5_fops.c |
-   | NVIDIA Jetson TX2        | 1097 | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi4_fops.c |
-   | NVIDIA Jetson TX2 NX     | 1097 | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi4_fops.c |
+Since different Jetson devices are using different video inputs (VI2, VI4 and VI5), the adjustment has to be done at the appropriate location. <br>
+
+   | video input | file       | location                             | call                                    |
+   | ----------- | ---------- | ------------------------------------ | --------------------------------------- |
+   | VI2         | vi2_fops.c | function tegra_channel_ec_init       | chan->timeout = msecs_to_jiffies(5000); |
+   | VI4         | vi4_fops.c | function vi4_channel_start_streaming | chan->timeout = msecs_to_jiffies(5000); |
+   | VI5         | vi5_fops.c | define                               | #define CAPTURE_TIMEOUT_MS	5000         |
+
+The following table lists the Jetson device and the necessary file:
+   | system on module         | in file                                                          |
+   | ------------------------ | ---------------------------------------------------------------- |
+   | NVIDIA Jetson Nano       | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi2_fops.c |
+   | NVIDIA Jetson TX2        | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi4_fops.c |
+   | NVIDIA Jetson TX2 NX     | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi4_fops.c |
+   | NVIDIA Jetson Xavier NX  | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi5_fops.c |
+   | NVIDIA Jetson AGX Xavier | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi5_fops.c |
+   | NVIDIA Jetson Orin Nano  | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi5_fops.c |
+   | NVIDIA Jetson Orin NX    | /kernel/nvidia/drivers/media/platform/tegra/camera/vi/vi5_fops.c |
+
+  > Be aware that a high timeout value might cause a high wait penalty when stopping the stream from single or external trigger mode. <br>
 
 ## Tested with VC MIPI Camera Module Revision
 
@@ -452,7 +482,7 @@ If you have your own BSP, you have to integrate the driver into it. Please follo
 
 ## Testing the camera
 
-To test the camera you can use [v4l2-test](https://github.com/pmliquify/v4l2-test)
+For testing the camera, please refer to [Test applications](/doc/TEST_APPLICATIONS.md)
 
 ## Annotations
 

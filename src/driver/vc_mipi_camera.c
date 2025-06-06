@@ -1,14 +1,26 @@
 #include <linux/version.h>
 #include <linux/module.h>
 #include <linux/of.h>
+#include <linux/errno.h>
 #include <media/tegra-v4l2-camera.h>
 #include <media/mc_common.h>
 #include <media/tegracam_core.h>
 #include "vc_mipi_core.h"
 #include "vc_mipi_modules.h"
 
-#define VERSION "0.18.1"
+#define VERSION "0.18.3"
 // #define VC_CTRL_VALUE
+
+//prototypes
+struct tegra_channel *get_tegra_channel(struct tegracam_device *tc_dev);
+void vc_update_image_size_from_mode(struct tegracam_device *tc_dev,  __u32 *left, __u32 *top, __u32 *width, __u32 *height);
+void vc_overwrite_image_size(struct tegracam_device *tc_dev, __u32 *width, __u32 *height, 
+        __u32 *tegra_width, __u32 *tegra_height, __u32 *tegra_line_length);
+void vc_update_tegra_image_size(struct tegracam_device *tc_dev, __u32 width, __u32 height, __u32 line_length);
+void vc_update_tegra_controls(struct tegracam_device *tc_dev);
+int vc_init_frmfmt(struct device *dev, struct vc_cam *cam);
+void vc_init_tegra_controls(struct tegracam_device *tc_dev);
+
 
 static struct vc_cam *tegracam_to_cam(struct tegracam_device *tc_dev)
 {
@@ -94,7 +106,7 @@ void vc_update_image_size_from_mode(struct tegracam_device *tc_dev,  __u32 *left
         struct sensor_image_properties *image = NULL;
         struct tegra_channel *chan = NULL;
         int mode_idx = 0;
-        bool bypass_mode = false;
+        bool isp_active = false;
 
         chan = get_tegra_channel(tc_dev);
         if (NULL == chan) {
@@ -102,9 +114,9 @@ void vc_update_image_size_from_mode(struct tegracam_device *tc_dev,  __u32 *left
                 return;
         }
 
-        bypass_mode = chan->bypass;
+        isp_active = chan->bypass;
 
-        if (bypass_mode) {
+        if (isp_active) {
                 mode_idx = tc_dev->s_data->sensor_mode_id;
         }
 
@@ -133,7 +145,7 @@ void vc_update_image_size_from_mode(struct tegracam_device *tc_dev,  __u32 *left
                         return;
                 }
 
-                if (bypass_mode) {
+                if (isp_active) {
                         if (ctrl->dt_binning_modes[mode_idx].mode_set) {
                                 vc_notice(dev, "%s(): Using binning_mode=%d from device tree mode%u \n",
                                 __FUNCTION__, ctrl->dt_binning_modes[mode_idx].binning_mode, mode_idx);
@@ -538,7 +550,11 @@ static int vc_start_streaming(struct tegracam_device *tc_dev)
         // ****************************************************************************************
         // NOTE: On some camera modules (e.g. IMX183, IMX273) the second and/or third image is 
         //       black if here isn't a sleep.
-        usleep_range(1000*sleepS, 1000*sleepS);
+        switch (cam->desc.mod_id) {
+                case MOD_ID_IMX183: usleep_range(1000*sleepS, 1000*sleepS); break;
+                case MOD_ID_IMX273: usleep_range(1000*sleepS, 1000*sleepS); break;
+                default: break;
+        }
 
         cam->state.former_binning_mode = cam->state.binning_mode;
         return ret;
@@ -551,6 +567,79 @@ static int vc_stop_streaming(struct tegracam_device *tc_dev)
         
         ret = vc_sen_stop_stream(cam);
         usleep_range(1000*g_sleepP, 1000*g_sleepP);
+
+        return ret;
+}
+
+static int vc_ready_to_stream(struct tegracam_device *tc_dev)
+{
+        struct vc_cam *cam = tegracam_to_cam(tc_dev);
+        struct device *dev = vc_core_get_sen_device(cam);
+        struct vc_ctrl *ctrl = &cam->ctrl;
+        struct i2c_client *client_sen = ctrl->client_sen;
+        struct camera_common_data *s_data = NULL;
+        struct tegra_channel *chan = get_tegra_channel(tc_dev);
+        struct sensor_mode_properties *mode = NULL;
+        struct sensor_image_properties *image = NULL;
+        int w_tmp = 0, h_tmp = 0, b_tmp = 0;
+        int mode_idx = 0;
+        bool isp_active = false;
+
+        int ret = 0;
+
+        s_data = to_camera_common_data(&client_sen->dev);
+        if (NULL == s_data) {
+                vc_err(dev, "%s(): s_data is NULL!\n", __FUNCTION__);
+                return -1;
+        }
+
+        if (NULL == chan) {
+                vc_err(dev, "%s(): chan is NULL!\n", __FUNCTION__);
+                return -1;
+        }
+        isp_active = chan->bypass;
+        if (isp_active) {
+                mode_idx = tc_dev->s_data->sensor_mode_id;
+        }
+
+        mode = tegracam_to_mode(tc_dev, mode_idx);
+        if (NULL == mode) {
+                vc_err(dev, "%s(): mode is NULL!\n", __FUNCTION__);
+                return -1;
+        }
+
+        image = &mode->image_properties;
+        if (NULL == image) {
+                vc_err(dev, "%s(): image is NULL!\n", __FUNCTION__);
+                return -1;
+        }
+
+        if (isp_active) {
+                if (ctrl->dt_binning_modes[s_data->sensor_mode_id].mode_set) {
+                        b_tmp = ctrl->dt_binning_modes[s_data->sensor_mode_id].binning_mode;
+                } else {
+                        b_tmp = cam->state.binning_mode;
+                }
+        } else {
+                b_tmp = cam->state.binning_mode;
+        }
+
+        if (0 < ctrl->binnings[b_tmp].h_factor) {
+                w_tmp = image->width * ctrl->binnings[b_tmp].h_factor;
+                if (cam->ctrl.frame.width < w_tmp) {
+                        vc_err(dev, "%s(): Could not stat stream: width (%d x %d = %d) exceeds maximum width (%d) \n", __FUNCTION__, 
+                        image->width, ctrl->binnings[b_tmp].h_factor, w_tmp, cam->ctrl.frame.width);
+                        return -EINVAL;
+                }
+        }
+        if (0 < ctrl->binnings[b_tmp].v_factor) {
+                h_tmp = image->height * ctrl->binnings[b_tmp].v_factor;
+                if (cam->ctrl.frame.height < h_tmp) {
+                        vc_err(dev, "%s(): Could not stat stream: height (%d x %d = %d) exceeds maximum height (%d) \n", __FUNCTION__, 
+                        image->height, ctrl->binnings[b_tmp].v_factor, h_tmp, cam->ctrl.frame.height);
+                        return -EINVAL;
+                }
+        }
 
         return ret;
 }
@@ -577,6 +666,7 @@ static struct camera_common_sensor_ops vc_sensor_ops = {
         .stop_streaming = vc_stop_streaming,
         .power_get = vc_power_get,
         .parse_dt = vc_parse_dt,
+        .ready_to_stream = vc_ready_to_stream, 
 };
 
 int vc_init_frmfmt(struct device *dev, struct vc_cam *cam)
@@ -602,7 +692,7 @@ int vc_init_frmfmt(struct device *dev, struct vc_cam *cam)
         frmfmt->num_framerates = 1;
 
         fps[0] = cam->ctrl.framerate.def;
-        
+
         frmfmt->size.width = cam->ctrl.frame.width;
         frmfmt->size.height = cam->ctrl.frame.height;
         frmfmt->hdr_en = 0;
@@ -687,7 +777,6 @@ static void vc_init_binning(struct device *dev, struct vc_cam *cam)
         vc_notice(dev, "%s(): Init binning modes\n", __FUNCTION__);
 
         for (i = 0; i < MAX_NUM_SENSOR_MODES; i++) {
-                ctrl->dt_binning_modes[i].mode_set = false;
                 snprintf(temp_str, sizeof(temp_str), "%s%d", OF_SENSORMODE_PREFIX, i);
                 node_tmp = of_get_child_by_name(np, temp_str);
                 of_node_put(node_tmp);
@@ -703,6 +792,7 @@ static void vc_init_binning(struct device *dev, struct vc_cam *cam)
                         vc_dbg(dev, "%s(): Unable to read binning_mode from device tree mode%d!\n", __FUNCTION__, i);
                         continue;
                 }
+
                 ctrl->dt_binning_modes[i].mode_set = true;
         }
 }
@@ -795,14 +885,22 @@ static int vc_probe(struct i2c_client *client, const struct i2c_device_id *id)
 #if defined(VC_MIPI_JETSON_NANO) && defined(VC_MIPI_L4T_32_7_4)
         struct camera_common_data *common_data;
 #endif
+        struct dt_binning_mode *dt_binning_modes = NULL;
         int ret;
 
         vc_notice(dev, "%s(): Probing UNIVERSAL VC MIPI Driver (v%s)\n", __func__, VERSION);
         // --------------------------------------------------------------------
 
-         cam = devm_kzalloc(dev, sizeof(struct vc_cam), GFP_KERNEL);
+        cam = devm_kzalloc(dev, sizeof(struct vc_cam), GFP_KERNEL);
         if (!cam)
                 return -ENOMEM;
+
+        dt_binning_modes = devm_kzalloc(dev, (MAX_NUM_SENSOR_MODES * sizeof(struct dt_binning_mode)), GFP_KERNEL);
+        if (NULL == dt_binning_modes) {
+                return -ENOMEM;
+        }
+
+        cam->ctrl.dt_binning_modes = &dt_binning_modes[0];
 
         tc_dev = devm_kzalloc(dev, sizeof(struct tegracam_device), GFP_KERNEL);
         if (!tc_dev)

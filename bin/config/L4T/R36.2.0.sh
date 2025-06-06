@@ -24,7 +24,7 @@ CHECK4MD5=1
 
 BSP_FILE_CHECKSUM="d63a573a5fe0d23fb49dca41d4f96c6f"
 RFS_FILE_CHECKSUM="67fdb51e6fc1a90b84cec8299e115b32"
-SRC_FILE_CHECKSUM="b80b2a2394f7b7abdea6161becfe345a"
+SRC_FILE_CHECKSUM="fc76fefcac4280a70b38ce1157dccaec"
 
 . $BIN_DIR/config/L4T/urls_35.1.0+.sh
 
@@ -44,6 +44,7 @@ DTSI_DEST_DICT+=(["Auvidea_JNX42_OrinNX"]="$KERNEL_SOURCE/hardware/nvidia/t23x/n
 
 #setup
 DRIVER_DST_DIR=$KERNEL_SOURCE/nvidia-oot/drivers/media/i2c/vc_mipi
+KERNEL_OUT=$KERNEL_SOURCE/nvidia-oot
 export KERNEL_HEADERS=$KERNEL_SOURCE/kernel/kernel-jammy-src
 
 KERNEL_DIR=kernel/kernel-jammy-src/
@@ -52,6 +53,7 @@ MODULES_BSP=$BSP_DIR/Linux_for_Tegra/rootfs/usr
 DTB_OUT=$KERNEL_OUT/arch/arm64/boot/dts/nvidia
 
 ROOTFS_DIR=$BSP_DIR/Linux_for_Tegra/rootfs
+MODULE_TARGET_LOCATION=extra/drivers/media/i2c
 
 ORIN_FLASH_CONFIG_FOLDER="generic"
 ORIN_FLASH_PARTITION_MMC="mmcblk0p1"
@@ -71,6 +73,7 @@ function L4T_add_kernel_to_repo {
         echo "Adding kernel sources to local repository ($VC_MIPI_BSP) ..."
 
         git add hardware
+        git add kernel
         git add nvidia-oot
 }
 
